@@ -1,0 +1,89 @@
+digraph ERD {
+  graph [rankdir=LR, splines=spline, nodesep=0.6, ranksep=1.4, bgcolor="white",
+         fontname="Helvetica", label="Accessories Store — MVP Database Schema\n\n",
+         labelloc="t", fontsize=20];
+  node  [shape=plaintext, fontname="Helvetica"];
+  edge  [fontname="Helvetica", fontsize=10, color="#5F5E5A"];
+
+  categories [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6">
+      <TR><TD BGCOLOR="#1D9E75" COLSPAN="3"><FONT COLOR="white" POINT-SIZE="14"><B>categories</B></FONT></TD></TR>
+      <TR><TD BGCOLOR="#E1F5EE" ALIGN="LEFT"><B>PK</B></TD><TD BGCOLOR="#E1F5EE" ALIGN="LEFT" PORT="id">id</TD><TD BGCOLOR="#E1F5EE" ALIGN="LEFT"><FONT COLOR="#0F6E56">integer</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">name</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>UK</B></TD><TD ALIGN="LEFT">slug</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">description</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">is_active</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">boolean DEFAULT true</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">created_at</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">timestamptz</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">updated_at</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">timestamptz</FONT></TD></TR>
+    </TABLE>>];
+
+  products [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6">
+      <TR><TD BGCOLOR="#534AB7" COLSPAN="3"><FONT COLOR="white" POINT-SIZE="14"><B>products</B></FONT></TD></TR>
+      <TR><TD BGCOLOR="#EEEDFE" ALIGN="LEFT"><B>PK</B></TD><TD BGCOLOR="#EEEDFE" ALIGN="LEFT" PORT="id">id</TD><TD BGCOLOR="#EEEDFE" ALIGN="LEFT"><FONT COLOR="#3C3489">integer</FONT></TD></TR>
+      <TR><TD BGCOLOR="#EEEDFE" ALIGN="LEFT"><B>FK</B></TD><TD BGCOLOR="#EEEDFE" ALIGN="LEFT" PORT="cat">category_id</TD><TD BGCOLOR="#EEEDFE" ALIGN="LEFT"><FONT COLOR="#3C3489">integer NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">name</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>UK</B></TD><TD ALIGN="LEFT">slug</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">description</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">price</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">numeric(10,2) CHECK &gt; 0</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">discount_price</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">numeric(10,2) NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>UK</B></TD><TD ALIGN="LEFT">sku</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">stock_quantity</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">integer CHECK &gt;= 0</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">is_active</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">boolean DEFAULT true</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">created_at</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">timestamptz</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">updated_at</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">timestamptz</FONT></TD></TR>
+    </TABLE>>];
+
+  product_images [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6">
+      <TR><TD BGCOLOR="#D4537E" COLSPAN="3"><FONT COLOR="white" POINT-SIZE="14"><B>product_images</B></FONT></TD></TR>
+      <TR><TD BGCOLOR="#FBEAF0" ALIGN="LEFT"><B>PK</B></TD><TD BGCOLOR="#FBEAF0" ALIGN="LEFT">id</TD><TD BGCOLOR="#FBEAF0" ALIGN="LEFT"><FONT COLOR="#72243E">integer</FONT></TD></TR>
+      <TR><TD BGCOLOR="#FBEAF0" ALIGN="LEFT"><B>FK</B></TD><TD BGCOLOR="#FBEAF0" ALIGN="LEFT" PORT="prod">product_id</TD><TD BGCOLOR="#FBEAF0" ALIGN="LEFT"><FONT COLOR="#72243E">integer NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">url</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">alt_text</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">sort_order</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">integer DEFAULT 0</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">is_primary</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">boolean DEFAULT false</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">created_at</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">timestamptz</FONT></TD></TR>
+    </TABLE>>];
+
+  orders [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6">
+      <TR><TD BGCOLOR="#185FA5" COLSPAN="3"><FONT COLOR="white" POINT-SIZE="14"><B>orders</B></FONT></TD></TR>
+      <TR><TD BGCOLOR="#E6F1FB" ALIGN="LEFT"><B>PK</B></TD><TD BGCOLOR="#E6F1FB" ALIGN="LEFT" PORT="id">id</TD><TD BGCOLOR="#E6F1FB" ALIGN="LEFT"><FONT COLOR="#0C447C">integer</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><B>UK</B></TD><TD ALIGN="LEFT">order_number</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">customer_name</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">customer_email</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">customer_phone</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">shipping_address_line1</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">shipping_address_line2</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">shipping_city</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">shipping_postal_code</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">status</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text DEFAULT 'pending'</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">payment_method</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text CHECK IN (...)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">payment_reference</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">subtotal</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">numeric(10,2)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">shipping_fee</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">numeric(10,2) DEFAULT 0</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">total</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">numeric(10,2)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">notes</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">text NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">created_at</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">timestamptz</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">updated_at</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">timestamptz</FONT></TD></TR>
+    </TABLE>>];
+
+  order_items [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6">
+      <TR><TD BGCOLOR="#D85A30" COLSPAN="3"><FONT COLOR="white" POINT-SIZE="14"><B>order_items</B></FONT></TD></TR>
+      <TR><TD BGCOLOR="#FAECE7" ALIGN="LEFT"><B>PK</B></TD><TD BGCOLOR="#FAECE7" ALIGN="LEFT">id</TD><TD BGCOLOR="#FAECE7" ALIGN="LEFT"><FONT COLOR="#712B13">integer</FONT></TD></TR>
+      <TR><TD BGCOLOR="#FAECE7" ALIGN="LEFT"><B>FK</B></TD><TD BGCOLOR="#FAECE7" ALIGN="LEFT" PORT="ord">order_id</TD><TD BGCOLOR="#FAECE7" ALIGN="LEFT"><FONT COLOR="#712B13">integer NOT NULL</FONT></TD></TR>
+      <TR><TD BGCOLOR="#FAECE7" ALIGN="LEFT"><B>FK</B></TD><TD BGCOLOR="#FAECE7" ALIGN="LEFT" PORT="prod">product_id</TD><TD BGCOLOR="#FAECE7" ALIGN="LEFT"><FONT COLOR="#712B13">integer NOT NULL</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">product_name</TD><TD ALIGN="LEFT"><FONT COLOR="#993C1D">text — snapshot</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">product_sku</TD><TD ALIGN="LEFT"><FONT COLOR="#993C1D">text — snapshot</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">unit_price</TD><TD ALIGN="LEFT"><FONT COLOR="#993C1D">numeric(10,2) — snapshot</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">quantity</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">integer CHECK &gt; 0</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"></TD><TD ALIGN="LEFT">created_at</TD><TD ALIGN="LEFT"><FONT COLOR="#5F5E5A">timestamptz</FONT></TD></TR>
+    </TABLE>>];
+
+  categories:id -> products:cat       [arrowtail="tee", arrowhead="crow", dir=both, label="  contains  "];
+  products:id   -> product_images:prod [arrowtail="tee", arrowhead="crow", dir=both, label="  has  "];
+  products:id   -> order_items:prod    [arrowtail="tee", arrowhead="crow", dir=both, label="  appears in  ", style=dashed];
+  orders:id     -> order_items:ord     [arrowtail="tee", arrowhead="crow", dir=both, label="  made up of  "];
+}
