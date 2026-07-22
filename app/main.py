@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 
-app = FastAPI()
+from app.routers import products
+
+app = FastAPI(title="Accessories Store")
+
+app.include_router(products.router)
 
 
 @app.get("/")
