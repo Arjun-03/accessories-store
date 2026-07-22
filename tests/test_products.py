@@ -8,11 +8,15 @@ def test_list_products_returns_active_products(client, db_session):
     category = Category(name="Nails", slug="nails")
     db_session.add(category)
     db_session.flush()
-    db_session.add(Product(
-        category_id=category.id,
-        name="Test Set", slug="test-set",
-        price=Decimal("1500.00"), stock_quantity=10,
-    ))
+    db_session.add(
+        Product(
+            category_id=category.id,
+            name="Test Set",
+            slug="test-set",
+            price=Decimal("1500.00"),
+            stock_quantity=10,
+        )
+    )
     db_session.commit()
 
     # Act: call the endpoint
@@ -32,12 +36,26 @@ def test_list_products_excludes_inactive_products(client, db_session):
     category = Category(name="Nails", slug="nails")
     db_session.add(category)
     db_session.flush()
-    db_session.add_all([
-        Product(category_id=category.id, name="Visible", slug="visible",
-                price=Decimal("1500.00"), stock_quantity=5, is_active=True),
-        Product(category_id=category.id, name="Hidden", slug="hidden",
-                price=Decimal("1600.00"), stock_quantity=5, is_active=False),
-    ])
+    db_session.add_all(
+        [
+            Product(
+                category_id=category.id,
+                name="Visible",
+                slug="visible",
+                price=Decimal("1500.00"),
+                stock_quantity=5,
+                is_active=True,
+            ),
+            Product(
+                category_id=category.id,
+                name="Hidden",
+                slug="hidden",
+                price=Decimal("1600.00"),
+                stock_quantity=5,
+                is_active=False,
+            ),
+        ]
+    )
     db_session.commit()
 
     # Act
