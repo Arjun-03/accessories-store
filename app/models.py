@@ -2,8 +2,16 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import (
-    Boolean, CheckConstraint, DateTime, ForeignKey, Integer,
-    Numeric, String, Text, func, text,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,9 +20,7 @@ from app.db import Base
 
 class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        nullable=False, 
-        server_default=func.now()
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -31,9 +37,7 @@ class Category(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     slug: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)
     description: Mapped[str | None] = mapped_column(Text)
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default=text("true")
-    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
 
     products: Mapped[list["Product"]] = relationship(
         back_populates="category", cascade="save-update, merge"
@@ -41,7 +45,7 @@ class Category(TimestampMixin, Base):
 
     def __repr__(self) -> str:
         return f"<Category id={self.id} slug={self.slug!r}>"
-    
+
 
 class Product(TimestampMixin, Base):
     __tablename__ = "products"
@@ -67,9 +71,7 @@ class Product(TimestampMixin, Base):
     discount_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
     sku: Mapped[str | None] = mapped_column(String(64), unique=True)
 
-    stock_quantity: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default=text("0")
-    )
+    stock_quantity: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true"), index=True
     )
@@ -84,7 +86,7 @@ class Product(TimestampMixin, Base):
 
     def __repr__(self) -> str:
         return f"<Product id={self.id} sku={self.sku!r}>"
-    
+
 
 class ProductImage(Base):
     __tablename__ = "product_images"
@@ -105,11 +107,16 @@ class ProductImage(Base):
 
     def __repr__(self) -> str:
         return f"<ProductImage id={self.id} product_id={self.product_id}>"
-    
+
 
 ORDER_STATUSES = (
-    "pending", "paid", "processing", "shipped",
-    "delivered", "cancelled", "refunded",
+    "pending",
+    "paid",
+    "processing",
+    "shipped",
+    "delivered",
+    "cancelled",
+    "refunded",
 )
 PAYMENT_METHODS = ("cod", "bank_transfer")
 
@@ -117,9 +124,7 @@ PAYMENT_METHODS = ("cod", "bank_transfer")
 class Order(TimestampMixin, Base):
     __tablename__ = "orders"
     __table_args__ = (
-        CheckConstraint(
-            f"status IN {ORDER_STATUSES}", name="ck_orders_status_valid"
-        ),
+        CheckConstraint(f"status IN {ORDER_STATUSES}", name="ck_orders_status_valid"),
         CheckConstraint(
             f"payment_method IN {PAYMENT_METHODS}", name="ck_orders_payment_method_valid"
         ),
@@ -129,9 +134,7 @@ class Order(TimestampMixin, Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    order_number: Mapped[str] = mapped_column(
-        String(32), nullable=False, unique=True, index=True
-    )
+    order_number: Mapped[str] = mapped_column(String(32), nullable=False, unique=True, index=True)
 
     customer_name: Mapped[str] = mapped_column(String(200), nullable=False)
     customer_email: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -161,7 +164,7 @@ class Order(TimestampMixin, Base):
 
     def __repr__(self) -> str:
         return f"<Order {self.order_number!r} status={self.status!r}>"
-    
+
 
 class OrderItem(Base):
     __tablename__ = "order_items"
@@ -196,5 +199,6 @@ class OrderItem(Base):
         return self.unit_price * self.quantity
 
     def __repr__(self) -> str:
-        return f"<OrderItem order_id={self.order_id} product_id={self.product_id} qty={self.quantity}>"
-    
+        return (
+            f"<OrderItem order_id={self.order_id} product_id={self.product_id} qty={self.quantity}>"
+        )

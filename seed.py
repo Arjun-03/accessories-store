@@ -22,15 +22,28 @@ def seed():
             print(f"Category already exists: {category.name}")
 
         products = [
-            {"name": "Rose Gold Almond", "price": "1500.00", "stock_quantity": 12,
-             "sku": "PON-RGA-001",
-             "description": "Almond-shaped set with a rose gold shimmer."},
-            {"name": "Matte Black Coffin", "price": "1800.00", "stock_quantity": 5,
-             "sku": "PON-MBC-002",
-             "description": "Bold matte black in a long coffin shape."},
-            {"name": "French Tip Classic", "price": "1400.00", "stock_quantity": 20,
-             "sku": "PON-FTC-003", "discount_price": "1200.00",
-             "description": "Timeless French tips, everyday wear."},
+            {
+                "name": "Rose Gold Almond",
+                "price": "1500.00",
+                "stock_quantity": 12,
+                "sku": "PON-RGA-001",
+                "description": "Almond-shaped set with a rose gold shimmer.",
+            },
+            {
+                "name": "Matte Black Coffin",
+                "price": "1800.00",
+                "stock_quantity": 5,
+                "sku": "PON-MBC-002",
+                "description": "Bold matte black in a long coffin shape.",
+            },
+            {
+                "name": "French Tip Classic",
+                "price": "1400.00",
+                "stock_quantity": 20,
+                "sku": "PON-FTC-003",
+                "discount_price": "1200.00",
+                "description": "Timeless French tips, everyday wear.",
+            },
         ]
 
         created = 0
@@ -38,16 +51,20 @@ def seed():
             slug = make_slug(data["name"])
             if db.query(Product).filter_by(slug=slug).first() is not None:
                 continue
-            db.add(Product(
-                category_id=category.id,
-                name=data["name"],
-                slug=slug,
-                description=data["description"],
-                price=Decimal(data["price"]),
-                discount_price=Decimal(data["discount_price"]) if "discount_price" in data else None,
-                sku=data["sku"],
-                stock_quantity=data["stock_quantity"],
-            ))
+            db.add(
+                Product(
+                    category_id=category.id,
+                    name=data["name"],
+                    slug=slug,
+                    description=data["description"],
+                    price=Decimal(data["price"]),
+                    discount_price=Decimal(data["discount_price"])
+                    if "discount_price" in data
+                    else None,
+                    sku=data["sku"],
+                    stock_quantity=data["stock_quantity"],
+                )
+            )
             created += 1
 
         db.commit()
