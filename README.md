@@ -33,7 +33,7 @@ necklaces, hair accessories) without redesign.
 ### 1. Clone and enter the project
 
 ```bash
-git clone https://github.com/<your-username>/accessories-store.git
+git clone https://github.com/Arjun-03/accessories-store.git
 cd accessories-store
 ```
 
