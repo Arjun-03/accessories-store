@@ -65,3 +65,29 @@ def test_list_products_excludes_inactive_products(client, db_session):
     assert response.status_code == 200
     names = [p["name"] for p in response.json()]
     assert names == ["Visible"]
+
+
+def test_get_product_by_slug_returns_product(client, sample_product):
+    response = client.get("/api/products/rose-gold-almond")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == "Rose Gold Almond"
+    assert data["slug"] == "rose-gold-almond"
+    assert data["images"] == []
+
+
+def test_get_product_returns_404_when_not_found(client):
+    response = client.get("/api/products/does-not-exist")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Product not found"
+
+
+def test_get_product_returns_404_when_inactive(client, db_session, sample_product):
+    sample_product.is_active = False
+    db_session.commit()
+
+    response = client.get("/api/products/rose-gold-almond")
+
+    assert response.status_code == 404
