@@ -23,3 +23,16 @@ class ProductRead(BaseModel):
     sku: str | None
     stock_quantity: int
     category: CategoryRead
+
+
+class ProductImageRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    url: str
+    alt_text: str | None
+    is_primary: bool
+
+
+class ProductDetail(ProductRead):
+    images: list[ProductImageRead]
