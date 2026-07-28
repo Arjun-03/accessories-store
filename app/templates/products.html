@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Shop — Accessories Store{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-medium tracking-tight mb-8">Press-On Nails</h1>
+
+{% if products %}
+<div class="grid grid-cols-2 md:grid-cols-3 gap-8">
+  {% for product in products %}
+  <a href="/products/{{ product.slug }}" class="group">
+    <div class="aspect-square bg-neutral-100 rounded-lg overflow-hidden mb-3">
+      {% if product.images %}
+      <img src="{{ product.images[0].url }}" alt="{{ product.images[0].alt_text }}"
+           class="w-full h-full object-cover group-hover:scale-105 transition">
+      {% endif %}
+    </div>
+    <h2 class="text-sm font-medium">{{ product.name }}</h2>
+    <p class="text-sm text-neutral-600">
+        {% if product.discount_price %}
+        <span>Rs. {{ product.discount_price }}</span>
+        <span class="text-neutral-400 line-through ml-1">Rs. {{ product.price }}</span>
+        {% else %}
+        Rs. {{ product.price }}
+        {% endif %}
+    </p>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-neutral-500">No products available yet.</p>
+{% endif %}
+{% endblock %}

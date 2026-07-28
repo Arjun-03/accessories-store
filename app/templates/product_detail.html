@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} — Accessories Store{% endblock %}
+
+{% block content %}
+<div class="grid md:grid-cols-2 gap-12">
+
+  <div class="aspect-square bg-neutral-100 rounded-lg overflow-hidden">
+    {% if product.images %}
+    <img src="{{ product.images[0].url }}" alt="{{ product.images[0].alt_text }}"
+         class="w-full h-full object-cover">
+    {% endif %}
+  </div>
+
+  <div>
+    <h1 class="text-2xl font-medium tracking-tight mb-2">{{ product.name }}</h1>
+
+    <div class="mb-6">
+      {% if product.discount_price %}
+      <span class="text-xl">Rs. {{ product.discount_price }}</span>
+      <span class="text-neutral-400 line-through ml-2">Rs. {{ product.price }}</span>
+      {% else %}
+      <span class="text-xl">Rs. {{ product.price }}</span>
+      {% endif %}
+    </div>
+
+    {% if product.description %}
+    <p class="text-neutral-600 leading-relaxed mb-8">{{ product.description }}</p>
+    {% endif %}
+
+    {% if product.stock_quantity > 0 %}
+    <button class="bg-neutral-900 text-white text-sm px-8 py-3 rounded-full hover:bg-neutral-700">
+      Add to cart
+    </button>
+    {% else %}
+    <p class="text-neutral-500 text-sm">Out of stock</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Accessories Store{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#FAFAF8] text-neutral-900 antialiased">
+
+  <header class="border-b border-neutral-200">
+    <nav class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="text-lg font-medium tracking-tight">Accessories Store</a>
+      <a href="/products" class="text-sm text-neutral-600 hover:text-neutral-900">Shop</a>
+    </nav>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-12">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-neutral-200 mt-24">
+    <div class="max-w-6xl mx-auto px-6 py-8 text-sm text-neutral-500">
+      © 2026 Accessories Store
+    </div>
+  </footer>
+
+</body>
+</html>
