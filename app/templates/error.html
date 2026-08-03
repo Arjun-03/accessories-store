@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Something went wrong{% endblock %}
+
+{% block content %}
+<section class="text-center py-24">
+  <h1 class="text-2xl font-medium mb-3">{{ detail or "Something went wrong" }}</h1>
+  <p class="text-neutral-600 mb-8">Please go back and try again.</p>
+  <a href="/products" class="text-sm underline hover:text-neutral-600">Back to the shop</a>
+</section>
+{% endblock %}

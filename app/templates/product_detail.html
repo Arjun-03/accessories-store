@@ -29,9 +29,13 @@
     {% endif %}
 
     {% if product.stock_quantity > 0 %}
-    <button class="bg-neutral-900 text-white text-sm px-8 py-3 rounded-full hover:bg-neutral-700">
-      Add to cart
-    </button>
+    <form action="/cart/add" method="post">
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <button type="submit"
+        class="bg-neutral-900 text-white text-sm px-8 py-3 rounded-full hover:bg-neutral-700">
+        Add to cart
+      </button>
+    </form>
     {% else %}
     <p class="text-neutral-500 text-sm">Out of stock</p>
     {% endif %}

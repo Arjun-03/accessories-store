@@ -85,6 +85,10 @@ class Product(TimestampMixin, Base):
         order_by="ProductImage.sort_order",
     )
 
+    @property
+    def effective_price(self) -> Decimal:
+        return self.discount_price if self.discount_price is not None else self.price
+
     def __repr__(self) -> str:
         return f"<Product id={self.id} sku={self.sku!r}>"
 
