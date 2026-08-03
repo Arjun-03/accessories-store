@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Your Cart{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-medium tracking-tight mb-8">Your Cart</h1>
+
+{% if cart.items %}
+<div class="space-y-6">
+  {% for item in cart.items %}
+  <div class="flex items-center gap-4 border-b border-neutral-200 pb-6">
+    <div class="w-20 h-20 bg-neutral-100 rounded-lg shrink-0"></div>
+    <div class="flex-1">
+      <h2 class="text-sm font-medium">{{ item.product.name }}</h2>
+      <p class="text-sm text-neutral-600">
+        {% if item.product.discount_price %}
+        Rs. {{ item.product.discount_price }}
+        <span class="text-neutral-400 line-through ml-1">Rs. {{ item.product.price }}</span>
+        each
+        {% else %}
+        Rs. {{ item.product.price }} each
+        {% endif %}
+      </p>
+    </div>
+    <form action="/cart/update" method="post" class="flex items-center gap-2">
+      <input type="hidden" name="product_id" value="{{ item.product_id }}">
+      <input type="number" name="quantity" value="{{ item.quantity }}" min="0"
+             class="w-16 border border-neutral-300 rounded px-2 py-1 text-sm">
+      <button class="text-sm text-neutral-600 hover:text-neutral-900">Update</button>
+    </form>
+    <form action="/cart/remove" method="post">
+      <input type="hidden" name="product_id" value="{{ item.product_id }}">
+      <button class="text-sm text-neutral-400 hover:text-red-600">Remove</button>
+    </form>
+  </div>
+  {% endfor %}
+  <div class="flex justify-between items-center pt-6">
+    <span class="text-sm text-neutral-600">Subtotal</span>
+    <span class="text-lg font-medium">Rs. {{ subtotal }}</span>
+  </div>
+  <a href="/checkout"
+    class="mt-6 block text-center bg-neutral-900 text-white text-sm px-6 py-3 rounded-full hover:bg-neutral-700">
+    Proceed to checkout
+  </a>
+</div>
+{% else %}
+<p class="text-neutral-500">Your cart is empty. <a href="/products" class="underline">Start shopping</a></p>
+{% endif %}
+{% endblock %}

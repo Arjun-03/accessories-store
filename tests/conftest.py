@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from app.config import settings
 from app.db import Base, get_db
 from app.main import app
-from app.models import Category, Product
+from app.models import Cart, Category, Product
 
 TEST_DATABASE_URL = (
     f"postgresql+psycopg://{settings.postgres_user}:{settings.postgres_password}"
@@ -56,3 +56,12 @@ def sample_product(db_session):
     db_session.add(product)
     db_session.commit()
     return product
+
+
+@pytest.fixture()
+def cart(db_session):
+    c = Cart(session_token="test-token-12345")
+    db_session.add(c)
+    db_session.commit()
+    db_session.refresh(c)
+    return c

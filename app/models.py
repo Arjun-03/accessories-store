@@ -10,6 +10,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
     func,
     text,
 )
@@ -83,6 +84,10 @@ class Product(TimestampMixin, Base):
         cascade="all, delete-orphan",
         order_by="ProductImage.sort_order",
     )
+
+    @property
+    def effective_price(self) -> Decimal:
+        return self.discount_price if self.discount_price is not None else self.price
 
     def __repr__(self) -> str:
         return f"<Product id={self.id} sku={self.sku!r}>"
@@ -202,3 +207,40 @@ class OrderItem(Base):
         return (
             f"<OrderItem order_id={self.order_id} product_id={self.product_id} qty={self.quantity}>"
         )
+
+
+class Cart(TimestampMixin, Base):
+    __tablename__ = "carts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    session_token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+
+    items: Mapped[list["CartItem"]] = relationship(
+        back_populates="cart", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<Cart id={self.id} token={self.session_token[:8]}…>"
+
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+    __table_args__ = (
+        UniqueConstraint("cart_id", "product_id", name="uq_cart_items_cart_product"),
+        CheckConstraint("quantity > 0", name="ck_cart_items_quantity_positive"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cart_id: Mapped[int] = mapped_column(
+        ForeignKey("carts.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    cart: Mapped["Cart"] = relationship(back_populates="items")
+    product: Mapped["Product"] = relationship()
+
+    def __repr__(self) -> str:
+        return f"<CartItem cart_id={self.cart_id} product_id={self.product_id} qty={self.quantity}>"
