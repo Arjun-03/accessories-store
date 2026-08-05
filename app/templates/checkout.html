@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-medium tracking-tight mb-8">Checkout</h1>
+
+<div class="grid md:grid-cols-2 gap-12">
+
+  <form action="/checkout" method="post" class="space-y-4">
+    <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-wide">Shipping details</h2>
+
+    <input name="customer_name" required placeholder="Full name"
+           class="w-full border border-neutral-300 rounded px-3 py-2 text-sm">
+    <input name="customer_email" type="email" required placeholder="Email"
+           class="w-full border border-neutral-300 rounded px-3 py-2 text-sm">
+    <input name="customer_phone" required placeholder="Phone number"
+           class="w-full border border-neutral-300 rounded px-3 py-2 text-sm">
+    <input name="shipping_address_line1" required placeholder="Address line 1"
+           class="w-full border border-neutral-300 rounded px-3 py-2 text-sm">
+    <input name="shipping_address_line2" placeholder="Address line 2 (optional)"
+           class="w-full border border-neutral-300 rounded px-3 py-2 text-sm">
+    <input name="shipping_city" required placeholder="City"
+           class="w-full border border-neutral-300 rounded px-3 py-2 text-sm">
+    <input name="shipping_postal_code" placeholder="Postal code (optional)"
+           class="w-full border border-neutral-300 rounded px-3 py-2 text-sm">
+
+    <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-wide pt-4">Payment</h2>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="radio" name="payment_method" value="cod" checked> Cash on Delivery
+    </label>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="radio" name="payment_method" value="bank_transfer"> Bank Transfer
+    </label>
+
+    <button type="submit"
+            class="w-full bg-neutral-900 text-white text-sm px-6 py-3 rounded-full hover:bg-neutral-700 mt-4">
+      Place order
+    </button>
+  </form>
+
+  <div>
+    <h2 class="text-sm font-medium text-neutral-500 uppercase tracking-wide mb-4">Order summary</h2>
+    <div class="space-y-3">
+      {% for item in cart.items %}
+      <div class="flex justify-between text-sm">
+        <span>{{ item.product.name }} × {{ item.quantity }}</span>
+        <span>{{ item.line_total }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="border-t border-neutral-200 mt-4 pt-4 space-y-2 text-sm">
+      <div class="flex justify-between"><span class="text-neutral-600">Subtotal</span><span>Rs. {{ subtotal }}</span></div>
+      <div class="flex justify-between"><span class="text-neutral-600">Shipping</span><span>Rs. {{ shipping }}</span></div>
+      <div class="flex justify-between font-medium pt-2"><span>Total</span><span>Rs. {{ total }}</span></div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

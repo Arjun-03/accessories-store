@@ -9,6 +9,7 @@ from app.config import settings
 from app.db import Base, get_db
 from app.main import app
 from app.models import Cart, Category, Product
+from app.services.order_service import ShippingDetails
 
 TEST_DATABASE_URL = (
     f"postgresql+psycopg://{settings.postgres_user}:{settings.postgres_password}"
@@ -65,3 +66,17 @@ def cart(db_session):
     db_session.commit()
     db_session.refresh(c)
     return c
+
+
+@pytest.fixture()
+def shipping_details():
+    return ShippingDetails(
+        customer_name="Test Customer",
+        customer_email="test@example.com",
+        customer_phone="0771234567",
+        shipping_address_line1="123 Test Lane",
+        shipping_address_line2=None,
+        shipping_city="Colombo",
+        shipping_postal_code=None,
+        payment_method="cod",
+    )

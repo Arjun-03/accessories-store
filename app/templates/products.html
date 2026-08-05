@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros.html" import price_display %}
 
 {% block title %}Shop — Accessories Store{% endblock %}
 
@@ -16,14 +17,7 @@
       {% endif %}
     </div>
     <h2 class="text-sm font-medium">{{ product.name }}</h2>
-    <p class="text-sm text-neutral-600">
-        {% if product.discount_price %}
-        <span>Rs. {{ product.discount_price }}</span>
-        <span class="text-neutral-400 line-through ml-1">Rs. {{ product.price }}</span>
-        {% else %}
-        Rs. {{ product.price }}
-        {% endif %}
-    </p>
+    <p class="text-sm text-neutral-600">{{ price_display(product) }}</p>
   </a>
   {% endfor %}
 </div>

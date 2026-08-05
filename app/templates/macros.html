@@ -1,0 +1,8 @@
+{% macro price_display(product) %}
+{% if product.discount_price %}
+<span>Rs. {{ product.discount_price }}</span>
+<span class="text-neutral-400 line-through ml-1">Rs. {{ product.price }}</span>
+{% else %}
+<span>Rs. {{ product.price }}</span>
+{% endif %}
+{% endmacro %}

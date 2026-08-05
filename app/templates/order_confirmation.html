@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto text-center">
+  <h1 class="text-2xl font-medium tracking-tight mb-2">Thank you for your order</h1>
+  <p class="text-neutral-600 mb-1">Order <span class="font-medium">{{ order.order_number }}</span></p>
+  <p class="text-sm text-neutral-500 mb-8">A confirmation will be sent to {{ order.customer_email }}.</p>
+
+  <div class="text-left border border-neutral-200 rounded-lg p-6 space-y-3">
+    {% for item in order.items %}
+    <div class="flex justify-between text-sm">
+      <span>{{ item.product_name }} × {{ item.quantity }}</span>
+      <span>Rs. {{ item.line_total }}</span>
+    </div>
+    {% endfor %}
+    <div class="border-t border-neutral-200 pt-3 space-y-2 text-sm">
+      <div class="flex justify-between"><span class="text-neutral-600">Subtotal</span><span>Rs. {{ order.subtotal }}</span></div>
+      <div class="flex justify-between"><span class="text-neutral-600">Shipping</span><span>Rs. {{ order.shipping_fee }}</span></div>
+      <div class="flex justify-between font-medium pt-1"><span>Total</span><span>Rs. {{ order.total }}</span></div>
+    </div>
+  </div>
+
+  {% if order.payment_method == "bank_transfer" %}
+  <p class="text-sm text-neutral-600 mt-6">
+    Please transfer Rs. {{ order.total }} to complete your order. Bank details will follow by email.
+  </p>
+  {% else %}
+  <p class="text-sm text-neutral-600 mt-6">Pay in cash when your order is delivered.</p>
+  {% endif %}
+
+  <a href="/products" class="inline-block mt-8 text-sm underline hover:text-neutral-600">Continue shopping</a>
+</div>
+{% endblock %}
