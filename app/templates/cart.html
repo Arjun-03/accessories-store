@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "macros.html" import price_display %}
+
 {% block title %}Your Cart{% endblock %}
 
 {% block content %}
@@ -11,15 +13,7 @@
     <div class="w-20 h-20 bg-neutral-100 rounded-lg shrink-0"></div>
     <div class="flex-1">
       <h2 class="text-sm font-medium">{{ item.product.name }}</h2>
-      <p class="text-sm text-neutral-600">
-        {% if item.product.discount_price %}
-        Rs. {{ item.product.discount_price }}
-        <span class="text-neutral-400 line-through ml-1">Rs. {{ item.product.price }}</span>
-        each
-        {% else %}
-        Rs. {{ item.product.price }} each
-        {% endif %}
-      </p>
+      <p class="text-sm text-neutral-600">{{ price_display(item.product) }} each</p>
     </div>
     <form action="/cart/update" method="post" class="flex items-center gap-2">
       <input type="hidden" name="product_id" value="{{ item.product_id }}">

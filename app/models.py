@@ -242,5 +242,9 @@ class CartItem(Base):
     cart: Mapped["Cart"] = relationship(back_populates="items")
     product: Mapped["Product"] = relationship()
 
+    @property
+    def line_total(self) -> Decimal:
+        return self.product.effective_price * self.quantity
+
     def __repr__(self) -> str:
         return f"<CartItem cart_id={self.cart_id} product_id={self.product_id} qty={self.quantity}>"
