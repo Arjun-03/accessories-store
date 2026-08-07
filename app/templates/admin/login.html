@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+<div class="max-w-sm mx-auto py-12">
+  <h1 class="text-xl font-medium mb-6">Admin Login</h1>
+
+  {% if error %}
+  <p class="text-red-600 text-sm mb-4">{{ error }}</p>
+  {% endif %}
+
+  <form action="/admin/login" method="post" class="space-y-4">
+    <input name="email" type="email" required placeholder="Email"
+           class="w-full border border-neutral-300 rounded px-3 py-2 text-sm">
+    <input name="password" type="password" required placeholder="Password"
+           class="w-full border border-neutral-300 rounded px-3 py-2 text-sm">
+    <button type="submit"
+            class="w-full bg-neutral-900 text-white text-sm px-6 py-3 rounded-full hover:bg-neutral-700">
+      Log in
+    </button>
+  </form>
+</div>
+{% endblock %}

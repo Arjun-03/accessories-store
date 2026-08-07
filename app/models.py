@@ -248,3 +248,34 @@ class CartItem(Base):
 
     def __repr__(self) -> str:
         return f"<CartItem cart_id={self.cart_id} product_id={self.product_id} qty={self.quantity}>"
+
+
+class AdminUser(TimestampMixin, Base):
+    __tablename__ = "admin_users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+
+    def __repr__(self) -> str:
+        return f"<AdminUser id={self.id} email={self.email!r}>"
+
+
+class AdminSession(Base):
+    __tablename__ = "admin_sessions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    session_token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    admin_user_id: Mapped[int] = mapped_column(
+        ForeignKey("admin_users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    admin_user: Mapped["AdminUser"] = relationship()
+
+    def __repr__(self) -> str:
+        return f"<AdminSession admin_user_id={self.admin_user_id}>"

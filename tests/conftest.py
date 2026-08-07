@@ -8,7 +8,8 @@ from sqlalchemy.orm import sessionmaker
 from app.config import settings
 from app.db import Base, get_db
 from app.main import app
-from app.models import Cart, Category, Product
+from app.models import AdminUser, Cart, Category, Product
+from app.security import hash_password
 from app.services.order_service import ShippingDetails
 
 TEST_DATABASE_URL = (
@@ -80,3 +81,12 @@ def shipping_details():
         shipping_postal_code=None,
         payment_method="cod",
     )
+
+
+@pytest.fixture()
+def admin_user(db_session):
+    admin = AdminUser(email="admin@test.com", password_hash=hash_password("testpass123"))
+    db_session.add(admin)
+    db_session.commit()
+    db_session.refresh(admin)
+    return admin
