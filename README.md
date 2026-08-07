@@ -4,7 +4,11 @@ An online store for handmade press-on nails, built for a Sri Lanka–based
 business. Designed to expand into other accessory categories (earrings,
 necklaces, hair accessories) without redesign.
 
-**Status:** in development — not yet deployed.
+Customers can browse a product catalogue, add items to a cart, and place
+orders with Cash on Delivery or bank transfer. No account is required —
+checkout is available to guests.
+
+**Status:** in development — core buying flow complete, not yet deployed.
 
 ---
 
@@ -18,7 +22,10 @@ necklaces, hair accessories) without redesign.
 | Migrations | Alembic |
 | Database | PostgreSQL 16 (via Docker) |
 | Validation | Pydantic v2 |
+| Templating | Jinja2 |
+| Styling | Tailwind CSS (CDN for now) |
 | Testing | pytest |
+| Linting / formatting | Ruff + pre-commit |
 
 ---
 
@@ -62,9 +69,13 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
+### 4. Enable pre-commit hooks (once)
 
-Copy the template and fill in your own values:
+```bash
+pre-commit install
+```
+
+### 5. Configure environment variables
 
 ```bash
 cp .env.example .env
@@ -72,29 +83,28 @@ cp .env.example .env
 
 `.env` is git-ignored and must never be committed.
 
-### 5. Start the database
+### 6. Start the database
 
 ```bash
 docker compose up -d
 docker ps          # confirm accessories_db is running on port 5432
 ```
 
-### 6. Run migrations
+### 7. Run migrations
 
 ```bash
 alembic upgrade head
 ```
 
-### 7. Seed sample data (optional)
+### 8. Seed sample data (optional)
 
 ```bash
 python seed.py
 ```
 
-The seed script is idempotent — running it repeatedly will not create
-duplicates.
+The seed script is idempotent — running it repeatedly will not create duplicates.
 
-### 8. Run the application
+### 9. Run the application
 
 ```bash
 uvicorn app.main:app --reload
@@ -102,7 +112,10 @@ uvicorn app.main:app --reload
 
 | URL | Description |
 |---|---|
-| http://localhost:8000 | Root endpoint |
+| http://localhost:8000 | Home page |
+| http://localhost:8000/products | Product catalogue |
+| http://localhost:8000/cart | Shopping cart |
+| http://localhost:8000/checkout | Checkout |
 | http://localhost:8000/api/products | Product catalogue (JSON) |
 | http://localhost:8000/docs | Interactive API documentation |
 
@@ -127,7 +140,7 @@ Then run the suite:
 pytest -v
 ```
 
-Each test creates all tables, runs against a clean database, and drops them
+Each test builds all tables, runs against a clean database, and drops them
 afterwards, so every test starts from a known empty state.
 
 ---
@@ -141,18 +154,27 @@ accessories-store/
 ├── app/
 │   ├── config.py            # Settings loaded from environment variables
 │   ├── db.py                # Engine, session factory, declarative Base
+│   ├── dependencies.py      # Shared FastAPI dependencies (cart, cookies)
 │   ├── main.py              # FastAPI application entry point
 │   ├── models.py            # SQLAlchemy ORM models (database tables)
 │   ├── schemas.py           # Pydantic schemas (API boundary)
-│   ├── utils.py             # Small shared helpers
-│   ├── routers/             # HTTP endpoints, grouped by resource
-│   └── services/            # Business logic
+│   ├── templating.py        # Jinja2 template configuration
+│   ├── utils.py             # Small shared helpers (slugs, tokens)
+│   ├── routers/             # HTTP endpoints, grouped by area
+│   │   ├── products.py      #   JSON API for products
+│   │   ├── pages.py         #   Storefront pages (home, catalogue, detail)
+│   │   ├── cart.py          #   Cart actions
+│   │   └── checkout.py      #   Checkout and order confirmation
+│   ├── services/            # Business logic
+│   │   ├── product_service.py
+│   │   ├── cart_service.py
+│   │   └── order_service.py
+│   ├── templates/           # Jinja2 HTML templates
+│   └── static/              # CSS, images (served as-is)
 ├── docs/
 │   ├── adr/                 # Architecture Decision Records
-│   └── database-design.md   # Schema reference and design rationale
-├── tests/
-│   ├── conftest.py          # Shared pytest fixtures
-│   └── test_products.py
+│   └── database-design.md   # Schema reference and rationale
+├── tests/                   # pytest suite
 ├── docker-compose.yml       # PostgreSQL service definition
 ├── requirements.txt         # Pinned Python dependencies
 ├── seed.py                  # Development seed data
@@ -170,10 +192,33 @@ Browser → Router → Service → Model → PostgreSQL
 ```
 
 - **Router** — HTTP plumbing only: receives the request, delegates, returns.
-- **Service** — business logic and rules (e.g. only active products are public).
+- **Service** — business logic and rules (active-only products, stock checks,
+  cart totals, atomic order creation).
 - **Model** — SQLAlchemy tables and queries.
-- **Schema** — an explicit allowlist of fields exposed by the API. Database
+- **Schema** — an explicit allowlist of fields the JSON API exposes. Database
   models are never returned directly.
+
+Storefront pages call the service layer directly rather than calling the JSON
+API over HTTP — both the pages and the API are presentations of the same
+business logic.
+
+---
+
+## Key domain concepts
+
+- **Guest checkout.** No accounts at launch. Customer details are captured on
+  the order itself.
+- **Cart vs order.** A cart is a live, mutable view — its prices always reflect
+  current product prices. An order is a permanent record — it snapshots product
+  name, SKU, and price at purchase time, so later product changes never alter
+  past orders.
+- **Cart storage.** Cart contents live in the database, identified by an opaque
+  token in an `HttpOnly` cookie, so contents can't be tampered with client-side
+  (see ADR-002).
+- **Atomic checkout.** Order creation, stock decrement, and cart deletion happen
+  in a single transaction — all succeed or all roll back.
+- **Money.** Stored as `NUMERIC(10,2)` and handled as `Decimal` everywhere —
+  never as a float.
 
 ---
 
@@ -223,7 +268,21 @@ Then open a pull request, review the diff, merge, and delete the branch.
 | `fix:` | A bug fix |
 | `docs:` | Documentation only |
 | `test:` | Adding or changing tests |
+| `refactor:` | Restructuring without changing behaviour |
 | `chore:` | Tooling, dependencies, config |
+
+### Code quality
+
+Linting and formatting run automatically before each commit via pre-commit
+hooks (`ruff check` and `ruff format`, plus whitespace and private-key checks).
+
+To run manually:
+
+```bash
+ruff check --fix .    # lint
+ruff format .         # format
+pre-commit run --all-files
+```
 
 ---
 
@@ -231,12 +290,22 @@ Then open a pull request, review the diff, merge, and delete the branch.
 
 - Secrets live in `.env`, which is git-ignored. `.env.example` documents the
   required variables without exposing values.
-- `alembic.ini` deliberately does not contain a database URL; Alembic reads it
-  from `app.config` at runtime.
-- Money is stored as `NUMERIC(10,2)` and handled as `Decimal` throughout —
-  never as a float.
+- `alembic.ini` deliberately contains no database URL; Alembic reads it from
+  `app.config` at runtime.
+- Session tokens are generated with `secrets` (cryptographically random),
+  never `random`.
+- The cart cookie is `HttpOnly` and `SameSite=Lax`. `Secure` is currently off
+  for local HTTP development and **must be enabled in production (HTTPS)**.
 - Business rules are enforced by database constraints in addition to
   application validation.
+
+### Known limitations
+
+- Order confirmation pages are viewable by anyone with the order number
+  (guest checkout has no accounts to restrict against yet).
+- Concurrency: simultaneous checkout of the last unit is prevented by the
+  `stock_quantity >= 0` constraint but not yet handled gracefully.
+- Tailwind is loaded via CDN; it will be compiled to a static file before launch.
 
 ---
 
@@ -255,11 +324,13 @@ Then open a pull request, review the diff, merge, and delete the branch.
 **MVP (in progress)**
 
 - [x] Foundation — FastAPI app, PostgreSQL, migrations
-- [ ] Product catalogue — list, detail pages
-- [ ] Shopping cart
-- [ ] Checkout and orders (Cash on Delivery, bank transfer)
-- [ ] Admin — product and order management
-- [ ] Public pages and deployment
+- [x] Product catalogue — list and detail pages, JSON API
+- [x] Shopping cart — add, update, remove, session cookies
+- [x] Checkout and orders — guest checkout, COD / bank transfer, atomic orders
+- [ ] Admin dashboard — manage products, view and update orders
+- [ ] Public pages — About, FAQ, Contact
+- [ ] Product images
+- [ ] Deployment — Docker, HTTPS, cloud hosting
 
 **Post-launch**
 
@@ -267,3 +338,4 @@ Then open a pull request, review the diff, merge, and delete the branch.
 - Customer accounts
 - Search, filtering, and tags
 - Reviews and wishlist
+- Email notifications

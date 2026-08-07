@@ -3,11 +3,40 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Cart
-from app.services import cart_service
+from app.models import AdminUser, Cart
+from app.services import auth_service, cart_service
+
+ADMIN_COOKIE_NAME = "admin_session"
+ADMIN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7  # 7 days, matching session expiry
 
 CART_COOKIE_NAME = "cart_token"
 CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30 days, in seconds
+
+
+class NotAuthenticatedError(Exception):
+    """Raised when an admin route is accessed without a valid session."""
+
+
+def set_admin_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key=ADMIN_COOKIE_NAME,
+        value=token,
+        max_age=ADMIN_COOKIE_MAX_AGE,
+        httponly=True,
+        samesite="lax",
+        secure=False,  # TODO: True in production (HTTPS)
+    )
+
+
+def require_admin(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> AdminUser:
+    token = request.cookies.get(ADMIN_COOKIE_NAME)
+    session = auth_service.get_valid_session(db, token)
+    if session is None:
+        raise NotAuthenticatedError()
+    return session.admin_user
 
 
 def get_cart(
