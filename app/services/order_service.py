@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import HTTPException
+from fastapi import status as http_status
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload
 
 from app.config import settings
-from app.models import Cart, Order, OrderItem
+from app.models import ORDER_STATUSES, Cart, Order, OrderItem
 from app.utils import generate_order_number
 
 
@@ -23,13 +25,13 @@ class ShippingDetails:
 
 def place_order(db: Session, cart: Cart, details: ShippingDetails) -> Order:
     if not cart.items:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty")
+        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Cart is empty")
 
     # 1. Re-validate stock strictly, before changing anything.
     for item in cart.items:
         if item.quantity > item.product.stock_quantity:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
+                status_code=http_status.HTTP_409_CONFLICT,
                 detail=f"Not enough stock for {item.product.name}",
             )
 
@@ -82,5 +84,27 @@ def place_order(db: Session, cart: Cart, details: ShippingDetails) -> Order:
         db.rollback()
         raise
 
+    db.refresh(order)
+    return order
+
+
+def list_orders(db: Session) -> list[Order]:
+    stmt = select(Order).order_by(Order.created_at.desc())
+    return list(db.execute(stmt).scalars().all())
+
+
+def get_order_by_number(db: Session, order_number: str) -> Order | None:
+    stmt = select(Order).where(Order.order_number == order_number).options(joinedload(Order.items))
+    return db.execute(stmt).unique().scalar_one_or_none()
+
+
+def update_order_status(db: Session, order: Order, new_status: str) -> Order:
+    if new_status not in ORDER_STATUSES:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status: {new_status}",
+        )
+    order.status = new_status
+    db.commit()
     db.refresh(order)
     return order
