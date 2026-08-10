@@ -10,6 +10,7 @@ from app.db import Base, get_db
 from app.main import app
 from app.models import AdminUser, Cart, Category, Product
 from app.security import hash_password
+from app.services import order_service
 from app.services.order_service import ShippingDetails
 
 TEST_DATABASE_URL = (
@@ -90,3 +91,20 @@ def admin_user(db_session):
     db_session.commit()
     db_session.refresh(admin)
     return admin
+
+
+@pytest.fixture()
+def placed_order(db_session, cart, sample_product, shipping_details):
+    from app.services import cart_service
+
+    cart_service.add_to_cart(db_session, cart, sample_product.id, 2)
+    return order_service.place_order(db_session, cart, shipping_details)
+
+
+@pytest.fixture()
+def admin_client(client, admin_user):
+    client.post(
+        "/admin/login",
+        data={"email": "admin@test.com", "password": "testpass123"},
+    )
+    return client
