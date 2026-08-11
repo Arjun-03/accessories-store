@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Uploaded files are data, not code — don't commit them
+app/static/uploads/*
+!app/static/uploads/.gitkeep

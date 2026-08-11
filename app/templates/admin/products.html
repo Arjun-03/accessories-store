@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Products — Admin{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-2xl font-medium">Products</h1>
+  <div class="flex gap-4 items-center">
+    <a href="/admin" class="text-sm text-neutral-500 hover:text-neutral-900">← Dashboard</a>
+    <a href="/admin/products/new"
+       class="bg-neutral-900 text-white text-sm px-4 py-2 rounded-full hover:bg-neutral-700">
+      + New product
+    </a>
+  </div>
+</div>
+
+{% if products %}
+<table class="w-full text-sm">
+  <thead>
+    <tr class="text-left text-neutral-500 border-b border-neutral-200">
+      <th class="pb-2 font-medium">Name</th>
+      <th class="pb-2 font-medium">Price</th>
+      <th class="pb-2 font-medium">Stock</th>
+      <th class="pb-2 font-medium">Status</th>
+      <th class="pb-2 font-medium"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for product in products %}
+    <tr class="border-b border-neutral-100">
+      <td class="py-3">{{ product.name }}</td>
+      <td class="py-3">
+        Rs. {{ product.effective_price }}
+        {% if product.discount_price %}
+        <span class="text-xs text-green-700 ml-1">(was {{ product.price }})</span>
+        {% endif %}
+      </td>
+      <td class="py-3">{{ product.stock_quantity }}</td>
+      <td class="py-3">
+        {% if product.is_active %}
+        <span class="text-xs text-green-700">Active</span>
+        {% else %}
+        <span class="text-xs text-neutral-400">Inactive</span>
+        {% endif %}
+      </td>
+      <td class="py-3 text-right">
+        <a href="/admin/products/{{ product.id }}/edit" class="text-sm underline hover:text-neutral-600">Edit</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-neutral-500">No products yet. <a href="/admin/products/new" class="underline">Add one</a>.</p>
+{% endif %}
+{% endblock %}
