@@ -1,12 +1,16 @@
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
+from decimal import Decimal
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.dependencies import require_admin
-from app.models import ORDER_STATUSES, AdminUser
-from app.services import order_service
+from app.models import ORDER_STATUSES, AdminUser, Category
+from app.services import order_service, product_service
 from app.templating import templates
+from app.uploads import save_product_image
 
 router = APIRouter(tags=["admin"])
 
@@ -60,3 +64,61 @@ def admin_update_order_status(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
     order_service.update_order_status(db, order, new_status)
     return RedirectResponse(url=f"/admin/orders/{order_number}", status_code=303)
+
+
+@router.get("/admin/products", response_class=HTMLResponse)
+def admin_products(
+    request: Request,
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    products = product_service.list_all_products(db)
+    return templates.TemplateResponse(
+        request, "admin/products.html", {"products": products, "admin": admin}
+    )
+
+
+@router.get("/admin/products/new", response_class=HTMLResponse)
+def new_product_form(
+    request: Request,
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    categories = db.execute(select(Category)).scalars().all()
+    return templates.TemplateResponse(
+        request,
+        "admin/product_form.html",
+        {"categories": categories, "admin": admin, "product": None},
+    )
+
+
+@router.post("/admin/products/new")
+def create_product(
+    request: Request,
+    name: str = Form(...),
+    category_id: int = Form(...),
+    price: Decimal = Form(...),
+    discount_price: Decimal | None = Form(None),
+    description: str = Form(""),
+    sku: str = Form(""),
+    stock_quantity: int = Form(0),
+    image: UploadFile | None = File(None),
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    image_url = None
+    if image is not None and image.filename:
+        image_url = save_product_image(image)
+
+    product_service.create_product(
+        db,
+        name=name,
+        category_id=category_id,
+        price=price,
+        discount_price=discount_price,
+        description=description or None,
+        sku=sku,
+        stock_quantity=stock_quantity,
+        image_url=image_url,
+    )
+    return RedirectResponse(url="/admin/products", status_code=303)

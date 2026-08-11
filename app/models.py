@@ -89,6 +89,15 @@ class Product(TimestampMixin, Base):
     def effective_price(self) -> Decimal:
         return self.discount_price if self.discount_price is not None else self.price
 
+    @property
+    def primary_image(self) -> "ProductImage | None":
+        if not self.images:
+            return None
+        for image in self.images:
+            if image.is_primary:
+                return image
+        return self.images[0]
+
     def __repr__(self) -> str:
         return f"<Product id={self.id} sku={self.sku!r}>"
 

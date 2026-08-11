@@ -10,7 +10,12 @@
 <div class="space-y-6">
   {% for item in cart.items %}
   <div class="flex items-center gap-4 border-b border-neutral-200 pb-6">
-    <div class="w-20 h-20 bg-neutral-100 rounded-lg shrink-0"></div>
+    <div class="w-20 h-20 bg-neutral-100 rounded-lg overflow-hidden shrink-0">
+      {% if item.product.primary_image %}
+      <img src="{{ item.product.primary_image.url }}" alt="{{ item.product.primary_image.alt_text or item.product.name }}"
+        class="w-full h-full object-cover">
+      {% endif %}
+    </div>
     <div class="flex-1">
       <h2 class="text-sm font-medium">{{ item.product.name }}</h2>
       <p class="text-sm text-neutral-600">{{ price_display(item.product) }} each</p>

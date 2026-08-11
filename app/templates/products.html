@@ -12,7 +12,7 @@
   <a href="/products/{{ product.slug }}" class="group">
     <div class="aspect-square bg-neutral-100 rounded-lg overflow-hidden mb-3">
       {% if product.images %}
-      <img src="{{ product.images[0].url }}" alt="{{ product.images[0].alt_text }}"
+      <img src="{{ product.primary_image.url }}" alt="{{ product.primary_image.alt_text or product.name }}"
            class="w-full h-full object-cover group-hover:scale-105 transition">
       {% endif %}
     </div>
