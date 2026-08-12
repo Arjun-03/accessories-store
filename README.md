@@ -4,11 +4,12 @@ An online store for handmade press-on nails, built for a Sri Lanka–based
 business. Designed to expand into other accessory categories (earrings,
 necklaces, hair accessories) without redesign.
 
-Customers can browse a product catalogue, add items to a cart, and place
-orders with Cash on Delivery or bank transfer. No account is required —
-checkout is available to guests.
+Customers browse a product catalogue, add items to a cart, and place orders
+with Cash on Delivery or bank transfer — no account required. A password-
+protected admin dashboard lets the shop owner manage products (with image
+uploads) and orders.
 
-**Status:** in development — core buying flow complete, not yet deployed.
+**Status:** in development — store is operable end to end; not yet deployed.
 
 ---
 
@@ -24,6 +25,8 @@ checkout is available to guests.
 | Validation | Pydantic v2 |
 | Templating | Jinja2 |
 | Styling | Tailwind CSS (CDN for now) |
+| Auth | Argon2 password hashing, server-side sessions |
+| Images | Pillow (upload validation) |
 | Testing | pytest |
 | Linting / formatting | Ruff + pre-commit |
 
@@ -40,7 +43,7 @@ checkout is available to guests.
 ### 1. Clone and enter the project
 
 ```bash
-git clone https://github.com/Arjun-03/accessories-store.git
+git clone https://github.com/<your-username>/accessories-store.git
 cd accessories-store
 ```
 
@@ -104,7 +107,15 @@ python seed.py
 
 The seed script is idempotent — running it repeatedly will not create duplicates.
 
-### 9. Run the application
+### 9. Create an admin account
+
+Admins are created from the command line, not through a signup page:
+
+```bash
+python create_admin.py
+```
+
+### 10. Run the application
 
 ```bash
 uvicorn app.main:app --reload
@@ -116,6 +127,7 @@ uvicorn app.main:app --reload
 | http://localhost:8000/products | Product catalogue |
 | http://localhost:8000/cart | Shopping cart |
 | http://localhost:8000/checkout | Checkout |
+| http://localhost:8000/admin | Admin dashboard (login required) |
 | http://localhost:8000/api/products | Product catalogue (JSON) |
 | http://localhost:8000/docs | Interactive API documentation |
 
@@ -154,23 +166,29 @@ accessories-store/
 ├── app/
 │   ├── config.py            # Settings loaded from environment variables
 │   ├── db.py                # Engine, session factory, declarative Base
-│   ├── dependencies.py      # Shared FastAPI dependencies (cart, cookies)
+│   ├── dependencies.py      # Shared FastAPI dependencies (cart, admin auth, cookies)
 │   ├── main.py              # FastAPI application entry point
 │   ├── models.py            # SQLAlchemy ORM models (database tables)
 │   ├── schemas.py           # Pydantic schemas (API boundary)
+│   ├── security.py          # Password hashing (Argon2)
 │   ├── templating.py        # Jinja2 template configuration
+│   ├── uploads.py           # Product image upload validation and storage
 │   ├── utils.py             # Small shared helpers (slugs, tokens)
 │   ├── routers/             # HTTP endpoints, grouped by area
 │   │   ├── products.py      #   JSON API for products
 │   │   ├── pages.py         #   Storefront pages (home, catalogue, detail)
 │   │   ├── cart.py          #   Cart actions
-│   │   └── checkout.py      #   Checkout and order confirmation
+│   │   ├── checkout.py      #   Checkout and order confirmation
+│   │   ├── admin_auth.py    #   Admin login / logout
+│   │   └── admin.py         #   Admin dashboard (orders, products)
 │   ├── services/            # Business logic
 │   │   ├── product_service.py
 │   │   ├── cart_service.py
-│   │   └── order_service.py
-│   ├── templates/           # Jinja2 HTML templates
-│   └── static/              # CSS, images (served as-is)
+│   │   ├── order_service.py
+│   │   └── auth_service.py
+│   ├── templates/           # Jinja2 HTML templates (incl. admin/ and macros)
+│   └── static/
+│       └── uploads/         # Uploaded product images (git-ignored)
 ├── docs/
 │   ├── adr/                 # Architecture Decision Records
 │   └── database-design.md   # Schema reference and rationale
@@ -178,6 +196,7 @@ accessories-store/
 ├── docker-compose.yml       # PostgreSQL service definition
 ├── requirements.txt         # Pinned Python dependencies
 ├── seed.py                  # Development seed data
+├── create_admin.py          # Create an admin account (CLI)
 └── VISION.md                # Product vision and MVP scope
 ```
 
@@ -193,7 +212,7 @@ Browser → Router → Service → Model → PostgreSQL
 
 - **Router** — HTTP plumbing only: receives the request, delegates, returns.
 - **Service** — business logic and rules (active-only products, stock checks,
-  cart totals, atomic order creation).
+  cart totals, atomic order creation, authentication).
 - **Model** — SQLAlchemy tables and queries.
 - **Schema** — an explicit allowlist of fields the JSON API exposes. Database
   models are never returned directly.
@@ -206,19 +225,27 @@ business logic.
 
 ## Key domain concepts
 
-- **Guest checkout.** No accounts at launch. Customer details are captured on
-  the order itself.
+- **Guest checkout.** No customer accounts at launch. Customer details are
+  captured on the order itself.
+- **Admin authentication.** Argon2-hashed passwords, server-side sessions
+  (revocable), token in an HttpOnly cookie. Admins are created via CLI, never
+  a signup page. A single `require_admin` dependency protects every admin route.
 - **Cart vs order.** A cart is a live, mutable view — its prices always reflect
   current product prices. An order is a permanent record — it snapshots product
   name, SKU, and price at purchase time, so later product changes never alter
   past orders.
 - **Cart storage.** Cart contents live in the database, identified by an opaque
-  token in an `HttpOnly` cookie, so contents can't be tampered with client-side
-  (see ADR-002).
+  token in an HttpOnly cookie, so contents can't be tampered with client-side
+  (ADR-002).
 - **Atomic checkout.** Order creation, stock decrement, and cart deletion happen
   in a single transaction — all succeed or all roll back.
+- **Soft delete.** Products are deactivated (`is_active = false`), never hard-
+  deleted, because they may be referenced by historical orders.
 - **Money.** Stored as `NUMERIC(10,2)` and handled as `Decimal` everywhere —
-  never as a float.
+  never a float.
+- **Image uploads.** Admin-only, validated by content (real image, allowed
+  format, size limit) with server-generated filenames, stored under
+  `static/uploads/`.
 
 ---
 
@@ -292,10 +319,13 @@ pre-commit run --all-files
   required variables without exposing values.
 - `alembic.ini` deliberately contains no database URL; Alembic reads it from
   `app.config` at runtime.
-- Session tokens are generated with `secrets` (cryptographically random),
-  never `random`.
-- The cart cookie is `HttpOnly` and `SameSite=Lax`. `Secure` is currently off
-  for local HTTP development and **must be enabled in production (HTTPS)**.
+- Passwords are hashed with Argon2id and never stored in plaintext. Session and
+  cart tokens are generated with `secrets`, never `random`.
+- Login failures give an identical response for bad email vs bad password
+  (prevents account enumeration).
+- Cookies are `HttpOnly` and `SameSite=Lax`. `Secure` is off for local HTTP
+  development and **must be enabled in production (HTTPS)**.
+- Image uploads are validated by content and given server-generated filenames.
 - Business rules are enforced by database constraints in addition to
   application validation.
 
@@ -305,6 +335,12 @@ pre-commit run --all-files
   (guest checkout has no accounts to restrict against yet).
 - Concurrency: simultaneous checkout of the last unit is prevented by the
   `stock_quantity >= 0` constraint but not yet handled gracefully.
+- Product images: the schema supports many images per product, but the UI
+  manages only one (the primary). Multi-image galleries are a post-launch
+  feature — no schema change needed to add them.
+- Replacing a product image leaves the old file orphaned in `static/uploads/`.
+  Cleanup is deferred; harmless at low volume.
+- Image optimization (resizing/compression on upload) is not yet done.
 - Tailwind is loaded via CDN; it will be compiled to a static file before launch.
 
 ---
@@ -327,9 +363,8 @@ pre-commit run --all-files
 - [x] Product catalogue — list and detail pages, JSON API
 - [x] Shopping cart — add, update, remove, session cookies
 - [x] Checkout and orders — guest checkout, COD / bank transfer, atomic orders
-- [ ] Admin dashboard — manage products, view and update orders
+- [x] Admin dashboard — authentication, order management, product management with image uploads
 - [ ] Public pages — About, FAQ, Contact
-- [ ] Product images
 - [ ] Deployment — Docker, HTTPS, cloud hosting
 
 **Post-launch**
@@ -337,5 +372,6 @@ pre-commit run --all-files
 - PayHere card payments (see [ADR-001](docs/adr/ADR-001-payment-gateway.md))
 - Customer accounts
 - Search, filtering, and tags
+- Multi-image product galleries
 - Reviews and wishlist
 - Email notifications

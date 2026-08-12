@@ -23,6 +23,15 @@ TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commi
 
 
 @pytest.fixture()
+def category(db_session):
+    c = Category(name="Nails", slug="nails")
+    db_session.add(c)
+    db_session.commit()
+    db_session.refresh(c)
+    return c
+
+
+@pytest.fixture()
 def db_session():
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()

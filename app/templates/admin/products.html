@@ -42,8 +42,13 @@
         <span class="text-xs text-neutral-400">Inactive</span>
         {% endif %}
       </td>
-      <td class="py-3 text-right">
+      <td class="py-3 text-right space-x-3">
         <a href="/admin/products/{{ product.id }}/edit" class="text-sm underline hover:text-neutral-600">Edit</a>
+        <form action="/admin/products/{{ product.id }}/toggle" method="post" class="inline">
+          <button class="text-sm text-neutral-500 hover:text-neutral-900">
+            {% if product.is_active %}Deactivate{% else %}Activate{% endif %}
+          </button>
+        </form>
       </td>
     </tr>
     {% endfor %}

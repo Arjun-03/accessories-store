@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.dependencies import require_admin
-from app.models import ORDER_STATUSES, AdminUser, Category
+from app.models import ORDER_STATUSES, AdminUser, Category, Product
 from app.services import order_service, product_service
 from app.templating import templates
 from app.uploads import save_product_image
@@ -121,4 +121,73 @@ def create_product(
         stock_quantity=stock_quantity,
         image_url=image_url,
     )
+    return RedirectResponse(url="/admin/products", status_code=303)
+
+
+@router.get("/admin/products/{product_id}/edit", response_class=HTMLResponse)
+def edit_product_form(
+    product_id: int,
+    request: Request,
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    product = db.get(Product, product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    categories = db.execute(select(Category)).scalars().all()
+    return templates.TemplateResponse(
+        request,
+        "admin/product_form.html",
+        {"product": product, "categories": categories, "admin": admin},
+    )
+
+
+@router.post("/admin/products/{product_id}/edit")
+def update_product(
+    product_id: int,
+    request: Request,
+    name: str = Form(...),
+    category_id: int = Form(...),
+    price: Decimal = Form(...),
+    discount_price: Decimal | None = Form(None),
+    description: str = Form(""),
+    sku: str = Form(""),
+    stock_quantity: int = Form(...),
+    image: UploadFile | None = File(None),
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    product = db.get(Product, product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    new_image_url = None
+    if image is not None and image.filename:
+        new_image_url = save_product_image(image)
+
+    product_service.update_product(
+        db,
+        product,
+        name=name,
+        category_id=category_id,
+        price=price,
+        discount_price=discount_price,
+        description=description or None,
+        sku=sku,
+        stock_quantity=stock_quantity,
+        new_image_url=new_image_url,
+    )
+    return RedirectResponse(url="/admin/products", status_code=303)
+
+
+@router.post("/admin/products/{product_id}/toggle")
+def toggle_product(
+    product_id: int,
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    product = db.get(Product, product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    product_service.toggle_product_active(db, product)
     return RedirectResponse(url="/admin/products", status_code=303)
