@@ -2,6 +2,7 @@ from fastapi import Depends, Request, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.db import get_db
 from app.models import AdminUser, Cart
 from app.services import auth_service, cart_service
@@ -24,7 +25,7 @@ def set_admin_cookie(response: Response, token: str) -> None:
         max_age=ADMIN_COOKIE_MAX_AGE,
         httponly=True,
         samesite="lax",
-        secure=False,  # TODO: True in production (HTTPS)
+        secure=settings.cookie_secure,  # True in production, False in dev
     )
 
 
@@ -54,7 +55,7 @@ def set_cart_cookie(response: Response, cart: Cart) -> None:
         max_age=CART_COOKIE_MAX_AGE,
         httponly=True,
         samesite="lax",
-        secure=False,  # TODO: set True in production (HTTPS only)
+        secure=settings.cookie_secure,  # True in production, False in dev
     )
 
 
