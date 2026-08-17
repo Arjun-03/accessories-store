@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    environment: str = "development"
     shipping_flat_rate: str = "350.00"
 
     postgres_user: str
@@ -18,6 +19,14 @@ class Settings(BaseSettings):
             f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
+
+    @property
+    def cookie_secure(self) -> bool:
+        return self.is_production
 
 
 settings = Settings()
