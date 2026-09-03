@@ -3,8 +3,25 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Product, ProductImage
+from app.models import Category, Product, ProductImage
 from app.utils import make_unique_slug
+
+
+def list_categories(db: Session) -> list[Category]:
+    stmt = select(Category).order_by(Category.name)
+    return list(db.execute(stmt).scalars().all())
+
+
+def create_category(db: Session, *, name: str, description: str | None) -> Category:
+    category = Category(
+        name=name,
+        slug=make_unique_slug(db, name, Category),
+        description=description,
+    )
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+    return category
 
 
 def get_active_products(db: Session) -> list[Product]:
@@ -45,7 +62,7 @@ def create_product(
 ) -> Product:
     product = Product(
         name=name,
-        slug=make_unique_slug(db, name),
+        slug=make_unique_slug(db, name, Product),
         category_id=category_id,
         price=price,
         discount_price=discount_price,

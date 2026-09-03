@@ -191,3 +191,26 @@ def toggle_product(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     product_service.toggle_product_active(db, product)
     return RedirectResponse(url="/admin/products", status_code=303)
+
+
+@router.get("/admin/categories", response_class=HTMLResponse)
+def admin_categories(
+    request: Request,
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    categories = product_service.list_categories(db)
+    return templates.TemplateResponse(
+        request, "admin/categories.html", {"categories": categories, "admin": admin}
+    )
+
+
+@router.post("/admin/categories/new")
+def create_category(
+    name: str = Form(...),
+    description: str = Form(""),
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    product_service.create_category(db, name=name, description=description or None)
+    return RedirectResponse(url="/admin/categories", status_code=303)
