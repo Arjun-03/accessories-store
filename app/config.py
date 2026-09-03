@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: int = 5432
 
+    s3_bucket_name: str = ""
+    aws_region: str = "ap-south-1"
+
     @property
     def database_url(self) -> str:
         return (
@@ -27,6 +30,10 @@ class Settings(BaseSettings):
     @property
     def cookie_secure(self) -> bool:
         return self.is_production
+
+    @property
+    def use_s3(self) -> bool:
+        return self.is_production and bool(self.s3_bucket_name)
 
 
 settings = Settings()
