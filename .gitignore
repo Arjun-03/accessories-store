@@ -220,3 +220,5 @@ __marimo__/
 # Uploaded files are data, not code — don't commit them
 app/static/uploads/*
 !app/static/uploads/.gitkeep
+
+node_modules/

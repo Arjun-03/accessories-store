@@ -1,0 +1,31 @@
+{
+  "name": "accessories-store",
+  "version": "1.0.0",
+  "description": "An online store for handmade press-on nails, built for a Sri Lanka–based\r business. Designed to expand into other accessory categories (earrings,\r necklaces, hair accessories) without redesign.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:css": "tailwindcss -i app/static/css/input.css -o app/static/css/main.css --minify",
+    "watch:css": "tailwindcss -i app/static/css/input.css -o app/static/css/main.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arjun-03/accessories-store.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Arjun-03/accessories-store/issues"
+  },
+  "homepage": "https://github.com/Arjun-03/accessories-store#readme",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}
