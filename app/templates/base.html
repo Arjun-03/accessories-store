@@ -4,16 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Accessories Store{% endblock %}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
 </head>
-<body class="bg-[#FAFAF8] text-neutral-900 antialiased">
+<body class="bg-background text-ink font-sans antialiased">
 
-  <header class="border-b border-neutral-200">
-    <nav class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-      <a href="/" class="text-lg font-medium tracking-tight">Accessories Store</a>
-      <div class="flex items-center gap-6">
-        <a href="/products" class="text-sm text-neutral-600 hover:text-neutral-900">Shop</a>
-        <a href="/cart" class="text-sm text-neutral-600 hover:text-neutral-900">Cart</a>
+  <header class="border-b border-line">
+    <nav class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+      <a href="/" class="font-serif text-2xl tracking-tight text-ink">Éclat</a>
+
+      <div class="flex items-center gap-8 text-sm">
+        <a href="/products" class="text-muted hover:text-ink transition-colors">Shop</a>
+        <a href="/cart" class="text-muted hover:text-ink transition-colors">Cart</a>
       </div>
     </nav>
   </header>
