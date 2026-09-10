@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     environment: str = "development"
     shipping_flat_rate: str = "350.00"
+    editorial_images_enabled: bool = False
 
     postgres_user: str
     postgres_password: str

@@ -4,8 +4,12 @@
 {% block content %}
 <section class="relative w-screen left-1/2 -translate-x-1/2 -mt-12 mb-16">
   <div class="relative h-[70vh] min-h-[500px] max-h-[800px] overflow-hidden">
+    {% if settings.editorial_images_enabled %}
     <img src="/static/images/hero.png" alt="Éclat accessories"
          class="w-full h-full object-cover object-[center_25%]">
+    {% else %}
+    <div class="w-full h-full bg-surface"></div>
+    {% endif %}
 
     <div class="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent"></div>
 
