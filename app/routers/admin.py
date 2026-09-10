@@ -208,9 +208,45 @@ def admin_categories(
 @router.post("/admin/categories/new")
 def create_category(
     name: str = Form(...),
-    description: str = Form(""),
+    image: UploadFile | None = File(None),
     admin: AdminUser = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    product_service.create_category(db, name=name, description=description or None)
+    image_url = None
+    if image is not None and image.filename:
+        image_url = save_product_image(image)
+    product_service.create_category(db, name=name, description=None, image_url=image_url)
+    return RedirectResponse(url="/admin/categories", status_code=303)
+
+
+@router.get("/admin/categories/{category_id}/edit", response_class=HTMLResponse)
+def edit_category_form(
+    category_id: int,
+    request: Request,
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    category = db.get(Category, category_id)
+    if category is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+    return templates.TemplateResponse(
+        request, "admin/category_form.html", {"category": category, "admin": admin}
+    )
+
+
+@router.post("/admin/categories/{category_id}/edit")
+def update_category(
+    category_id: int,
+    name: str = Form(...),
+    image: UploadFile | None = File(None),
+    admin: AdminUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    category = db.get(Category, category_id)
+    if category is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+    new_image_url = None
+    if image is not None and image.filename:
+        new_image_url = save_product_image(image)
+    product_service.update_category(db, category, name=name, new_image_url=new_image_url)
     return RedirectResponse(url="/admin/categories", status_code=303)

@@ -1,35 +1,23 @@
 {% extends "base.html" %}
 {% from "macros.html" import price_display %}
 
-{% block title %}Shop — Accessories Store{% endblock %}
-
 {% block content %}
-<h1 class="text-2xl font-medium tracking-tight mb-8">Press-On Nails</h1>
+<div class="flex items-baseline justify-between mb-10">
+  <h1 class="font-serif text-3xl text-ink">
+    {% if active_category %}{{ active_category.name }}{% else %}Shop all{% endif %}
+  </h1>
+  {% if active_category %}
+  <a href="/products" class="text-sm text-muted hover:text-ink transition-colors">Clear filter</a>
+  {% endif %}
+</div>
 
 {% if products %}
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
   {% for product in products %}
-  <a href="/products/{{ product.slug }}" class="group block">
-    <div class="aspect-square bg-surface rounded-md overflow-hidden mb-4">
-      {% if product.primary_image %}
-      <img src="{{ product.primary_image.url }}"
-          alt="{{ product.primary_image.alt_text or product.name }}"
-          class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]">
-      {% endif %}
-    </div>
-    <h3 class="text-sm text-ink mb-1">{{ product.name }}</h3>
-    <p class="text-sm text-muted">
-      {% if product.discount_price %}
-      <span class="text-ink">Rs. {{ product.discount_price }}</span>
-      <span class="line-through ml-1 text-muted">Rs. {{ product.price }}</span>
-      {% else %}
-      Rs. {{ product.price }}
-      {% endif %}
-    </p>
-  </a>
+  {% include "partials/product_card.html" %}
   {% endfor %}
 </div>
 {% else %}
-<p class="text-neutral-500">No products available yet.</p>
+<p class="text-muted">No products found{% if active_category %} in {{ active_category.name }}{% endif %}.</p>
 {% endif %}
 {% endblock %}

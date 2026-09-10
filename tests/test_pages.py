@@ -2,7 +2,7 @@ def test_home_page_loads(client):
     response = client.get("/")
 
     assert response.status_code == 200
-    assert "Handmade Press-On Nails" in response.text
+    assert "make it yours" in response.text
 
 
 def test_product_list_page_shows_products(client, sample_product):

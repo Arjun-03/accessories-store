@@ -1,16 +1,74 @@
 {% extends "base.html" %}
-
-{% block title %}Handmade Press-On Nails{% endblock %}
+{% block title %}Éclat — Considered accessories{% endblock %}
 
 {% block content %}
-<section class="text-center py-16">
-  <h1 class="text-4xl font-medium tracking-tight mb-4">Handmade Press-On Nails</h1>
-  <p class="text-neutral-600 max-w-md mx-auto mb-8">
-    Reusable, handcrafted nail sets. Designed and made in Sri Lanka.
-  </p>
-  <a href="/products"
-     class="inline-block bg-neutral-900 text-white text-sm px-6 py-3 rounded-full hover:bg-neutral-700">
-    Shop the collection
-  </a>
+<section class="relative w-screen left-1/2 -translate-x-1/2 -mt-12 mb-16">
+  <div class="relative h-[70vh] min-h-[500px] max-h-[800px] overflow-hidden">
+    {% if settings.editorial_images_enabled %}
+    <img src="/static/images/hero.png" alt="Éclat accessories"
+         class="w-full h-full object-cover object-[center_25%]">
+    {% else %}
+    <div class="w-full h-full bg-surface"></div>
+    {% endif %}
+
+    <div class="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent"></div>
+
+    <div class="absolute inset-0 flex items-center">
+      <div class="max-w-6xl mx-auto px-6 w-full">
+        <div class="max-w-md">
+          <p class="text-sm text-white/80 tracking-wide mb-5">New season</p>
+          <h1 class="font-serif text-4xl lg:text-6xl text-white leading-[1.05] mb-6">
+            The details that make it yours
+          </h1>
+          <p class="text-white/90 leading-relaxed mb-8">
+            Handcrafted accessories designed to finish every look — quietly
+            considered, made to be worn every day.
+          </p>
+          <a href="/products"
+             class="inline-block bg-background text-ink text-sm tracking-wide px-8 py-4 rounded-full
+                    hover:bg-surface transition-colors">
+            Explore the collection
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-16 lg:py-24">
+  <div class="mb-10">
+    <h2 class="font-serif text-3xl text-ink">Find your detail</h2>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-6">
+    {% for category in categories %}
+    <a href="/products?category={{ category.slug }}" class="group block relative overflow-hidden rounded-lg">
+      <div class="aspect-[3/4] bg-surface">
+        {% if category.image_url %}
+        <img src="{{ category.image_url }}"
+             alt="{{ category.name }}"
+             class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]">
+        {% endif %}
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+      <h3 class="absolute bottom-5 left-5 font-serif text-xl text-white">{{ category.name }}</h3>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="py-16 lg:py-24">
+  <div class="flex items-baseline justify-between mb-10">
+    <h2 class="font-serif text-3xl text-ink">Just in</h2>
+    <a href="/products" class="text-sm text-muted hover:text-ink transition-colors">View all</a>
+  </div>
+
+  {% if new_products %}
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
+    {% for product in new_products %}
+    {% include "partials/product_card.html" %}
+    {% endfor %}
+  </div>
+  {% endif %}
 </section>
 {% endblock %}
