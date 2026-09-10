@@ -5,7 +5,7 @@
 <section class="relative w-screen left-1/2 -translate-x-1/2 -mt-12 mb-16">
   <div class="relative h-[70vh] min-h-[500px] max-h-[800px] overflow-hidden">
     {% if settings.editorial_images_enabled %}
-    <img src="/static/images/hero.png" alt="Éclat accessories"
+    <img src="/static/images/hero.jpg" alt="Éclat accessories"
          class="w-full h-full object-cover object-[center_25%]">
     {% else %}
     <div class="w-full h-full bg-surface"></div>
@@ -43,15 +43,16 @@
   <div class="grid md:grid-cols-3 gap-6">
     {% for category in categories %}
     <a href="/products?category={{ category.slug }}" class="group block relative overflow-hidden rounded-lg">
-      <div class="aspect-[3/4] bg-surface">
+      <div class="aspect-[3/4] {% if not category.image_url %}bg-surface flex items-center justify-center{% endif %}">
         {% if category.image_url %}
-        <img src="{{ category.image_url }}"
-             alt="{{ category.name }}"
-             class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]">
+        <img src="{{ category.image_url }}" alt="{{ category.name }}"
+            class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+        <h3 class="absolute bottom-5 left-5 font-serif text-xl text-white">{{ category.name }}</h3>
+        {% else %}
+        <h3 class="font-serif text-xl text-ink">{{ category.name }}</h3>
         {% endif %}
       </div>
-      <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-      <h3 class="absolute bottom-5 left-5 font-serif text-xl text-white">{{ category.name }}</h3>
     </a>
     {% endfor %}
   </div>
@@ -70,5 +71,35 @@
     {% endfor %}
   </div>
   {% endif %}
+</section>
+
+<section class="py-16 lg:py-24">
+  <div class="relative rounded-lg overflow-hidden">
+    <div class="aspect-[16/9] bg-surface">
+      {% if settings.editorial_images_enabled %}
+      <img src="/static/images/brand-moment.jpg" alt="Handcrafted with care"
+           class="w-full h-full object-cover object-center">
+      {% endif %}
+    </div>
+
+    {% if settings.editorial_images_enabled %}
+    <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent"></div>
+    {% endif %}
+
+    <div class="absolute inset-0 flex items-center">
+      <div class="px-8 lg:px-16 max-w-lg">
+        <p class="text-xs tracking-[0.2em] uppercase mb-4 {% if settings.editorial_images_enabled %}text-white/75{% else %}text-accent{% endif %}">
+          Our craft
+        </p>
+        <h2 class="font-serif text-3xl lg:text-5xl leading-[1.1] mb-5 {% if settings.editorial_images_enabled %}text-white{% else %}text-ink{% endif %}">
+          Made by hand,<br>meant to last
+        </h2>
+        <p class="text-sm lg:text-base leading-relaxed {% if settings.editorial_images_enabled %}text-white/90{% else %}text-muted{% endif %}">
+          Small details, considered materials, and a quiet kind of care
+          that shows in the wearing.
+        </p>
+      </div>
+    </div>
+  </div>
 </section>
 {% endblock %}

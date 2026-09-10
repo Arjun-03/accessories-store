@@ -224,6 +224,8 @@ app/static/uploads/*
 # node modules
 node_modules/
 
-# Editorial images are dev placeholders, not committed
+# Editorial images: ignore all, but commit the optimized production ones
 app/static/images/*
 !app/static/images/.gitkeep
+!app/static/images/hero.jpg
+!app/static/images/brand-moment.jpg
