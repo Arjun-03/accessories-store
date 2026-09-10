@@ -40,6 +40,34 @@ jobs:
           docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
+      - name: Run database migrations
+        env:
+          SUBNETS: "subnet-0685ae1f22b3734d2,subnet-0224884e27faf1db5,subnet-0c3a18425e4bc75b7"
+          SECURITY_GROUPS: "sg-05ff30ed07e89e61a,sg-00c3d9acf6b395d69"
+        run: |
+          TASK_ARN=$(aws ecs run-task \
+            --cluster default \
+            --task-definition default-accessories-store \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS],securityGroups=[$SECURITY_GROUPS],assignPublicIp=ENABLED}" \
+            --overrides '{"containerOverrides":[{"name":"Main","command":["alembic","upgrade","head"]}]}' \
+            --region $AWS_REGION \
+            --query "tasks[0].taskArn" --output text)
+
+          echo "Migration task: $TASK_ARN"
+          echo "Waiting for migration to complete..."
+          aws ecs wait tasks-stopped --cluster default --tasks "$TASK_ARN" --region $AWS_REGION
+
+          EXIT_CODE=$(aws ecs describe-tasks --cluster default --tasks "$TASK_ARN" --region $AWS_REGION \
+            --query "tasks[0].containers[0].exitCode" --output text)
+
+          echo "Migration exit code: $EXIT_CODE"
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Migration failed — aborting deploy."
+            exit 1
+          fi
+          echo "Migration succeeded."
+
       - name: Deploy to ECS Express Mode
         uses: aws-actions/amazon-ecs-deploy-express-service@v1
         with:
