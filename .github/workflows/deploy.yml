@@ -11,7 +11,6 @@ permissions:
 env:
   AWS_REGION: ap-south-1
   ECR_REPOSITORY: accessories-store
-  ECS_CLUSTER: default
   ECS_SERVICE: accessories-store
 
 jobs:
@@ -31,17 +30,20 @@ jobs:
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push image
+      - name: Build and push image (tagged with commit SHA)
+        id: build
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $REGISTRY/$ECR_REPOSITORY:latest .
-          docker push $REGISTRY/$ECR_REPOSITORY:latest
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy to ECS
-        run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
-            --force-new-deployment \
-            --region $AWS_REGION
+      - name: Deploy to ECS Express Mode
+        uses: aws-actions/amazon-ecs-deploy-express-service@v1
+        with:
+          service-name: ${{ env.ECS_SERVICE }}
+          image: ${{ steps.build.outputs.image }}
+          execution-role-arn: ${{ secrets.AWS_EXECUTION_ROLE_ARN }}
+          infrastructure-role-arn: ${{ secrets.AWS_INFRASTRUCTURE_ROLE_ARN }}
