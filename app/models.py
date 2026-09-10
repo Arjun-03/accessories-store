@@ -39,6 +39,7 @@ class Category(TimestampMixin, Base):
     slug: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)
     description: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    image_url: Mapped[str | None] = mapped_column(String(500))
 
     products: Mapped[list["Product"]] = relationship(
         back_populates="category", cascade="save-update, merge"

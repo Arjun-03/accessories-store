@@ -12,11 +12,14 @@ def list_categories(db: Session) -> list[Category]:
     return list(db.execute(stmt).scalars().all())
 
 
-def create_category(db: Session, *, name: str, description: str | None) -> Category:
+def create_category(
+    db: Session, *, name: str, description: str | None, image_url: str | None
+) -> Category:
     category = Category(
         name=name,
         slug=make_unique_slug(db, name, Category),
         description=description,
+        image_url=image_url,
     )
     db.add(category)
     db.commit()
@@ -24,13 +27,32 @@ def create_category(db: Session, *, name: str, description: str | None) -> Categ
     return category
 
 
-def get_active_products(db: Session) -> list[Product]:
+def update_category(
+    db: Session, category: Category, *, name: str, new_image_url: str | None
+) -> Category:
+    if name != category.name:
+        category.name = name
+        category.slug = make_unique_slug(db, name, Category)
+    if new_image_url is not None:
+        category.image_url = new_image_url
+    db.commit()
+    db.refresh(category)
+    return category
+
+
+def get_category_by_slug(db: Session, slug: str) -> Category | None:
+    return db.execute(select(Category).where(Category.slug == slug)).scalar_one_or_none()
+
+
+def get_active_products(db: Session, category_slug: str | None = None) -> list[Product]:
     stmt = (
         select(Product)
         .where(Product.is_active.is_(True))
         .options(joinedload(Product.category), joinedload(Product.images))
         .order_by(Product.created_at.desc())
     )
+    if category_slug:
+        stmt = stmt.join(Product.category).where(Category.slug == category_slug)
     return list(db.execute(stmt).unique().scalars().all())
 
 
@@ -120,3 +142,14 @@ def toggle_product_active(db: Session, product: Product) -> Product:
     db.commit()
     db.refresh(product)
     return product
+
+
+def get_newest_products(db: Session, limit: int = 4) -> list[Product]:
+    stmt = (
+        select(Product)
+        .where(Product.is_active.is_(True))
+        .options(joinedload(Product.category), joinedload(Product.images))
+        .order_by(Product.created_at.desc())
+        .limit(limit)
+    )
+    return list(db.execute(stmt).unique().scalars().all())

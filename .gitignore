@@ -221,4 +221,9 @@ __marimo__/
 app/static/uploads/*
 !app/static/uploads/.gitkeep
 
+# node modules
 node_modules/
+
+# Editorial images are dev placeholders, not committed
+app/static/images/*
+!app/static/images/.gitkeep

@@ -1,15 +1,15 @@
 # Accessories Store
 
-An online store for handmade press-on nails, built for a Sri Lanka–based
-business. Designed to expand into other accessory categories (earrings,
-necklaces, hair accessories) without redesign.
+An online store for handmade accessories, built for a Sri Lanka–based business.
+It launched with press-on nails and is designed to expand across jewellery,
+fashion accessories, and beyond without redesign.
 
-Customers browse a product catalogue, add items to a cart, and place orders
-with Cash on Delivery or bank transfer — no account required. A password-
-protected admin dashboard lets the shop owner manage products (with image
-uploads) and orders.
+Customers browse an editorial storefront, filter by category, add items to a
+cart, and place orders with Cash on Delivery or bank transfer — no account
+required. A password-protected admin dashboard lets the owner manage products,
+categories (with images), and orders.
 
-**Status:** in development — store is operable end to end; not yet deployed.
+**Status:** live in production; ongoing visual and feature refinement.
 
 ---
 
@@ -21,14 +21,16 @@ uploads) and orders.
 | Web framework | FastAPI |
 | ORM | SQLAlchemy 2.0 |
 | Migrations | Alembic |
-| Database | PostgreSQL 16 (via Docker) |
+| Database | PostgreSQL |
 | Validation | Pydantic v2 |
 | Templating | Jinja2 |
-| Styling | Tailwind CSS (CDN for now) |
+| Styling | Tailwind CSS v4 (compiled) |
 | Auth | Argon2 password hashing, server-side sessions |
-| Images | Pillow (upload validation) |
+| Images | Pillow (validation), Amazon S3 (production storage) |
 | Testing | pytest |
 | Linting / formatting | Ruff + pre-commit |
+| Deployment | Docker, Amazon ECR, ECS (Express Mode), RDS, S3 |
+| CI/CD | GitHub Actions (OIDC auth) |
 
 ---
 
@@ -37,17 +39,18 @@ uploads) and orders.
 ### Prerequisites
 
 - Python 3.12+
+- Node.js 18+ and npm (for compiling CSS)
 - Docker Desktop (running)
 - Git
 
 ### 1. Clone and enter the project
 
 ```bash
-git clone https://github.com/Arjun-03/accessories-store.git
+git clone https://github.com/<your-username>/accessories-store.git
 cd accessories-store
 ```
 
-### 2. Create and activate a virtual environment
+### 2. Python environment
 
 **Windows (PowerShell):**
 
@@ -63,13 +66,16 @@ python -m venv venv
 source venv/bin/activate
 ```
 
-> If PowerShell blocks the activation script, run
-> `Set-ExecutionPolicy -Scope CurrentUser -RemoteSigned` once, then retry.
-
-### 3. Install dependencies
-
 ```bash
 pip install -r requirements.txt
+```
+
+### 3. Frontend (CSS) dependencies
+
+The styling is compiled with Tailwind CSS v4, which needs Node:
+
+```bash
+npm install
 ```
 
 ### 4. Enable pre-commit hooks (once)
@@ -89,7 +95,7 @@ cp .env.example .env
 ### 6. Start the database
 
 ```bash
-docker compose up -d
+docker compose up -d db
 docker ps          # confirm accessories_db is running on port 5432
 ```
 
@@ -105,8 +111,6 @@ alembic upgrade head
 python seed.py
 ```
 
-The seed script is idempotent — running it repeatedly will not create duplicates.
-
 ### 9. Create an admin account
 
 Admins are created from the command line, not through a signup page:
@@ -115,7 +119,15 @@ Admins are created from the command line, not through a signup page:
 python create_admin.py
 ```
 
-### 10. Run the application
+### 10. Build the CSS
+
+```bash
+npm run build:css      # one-off build
+# or, while developing:
+npm run watch:css      # rebuilds automatically on template changes
+```
+
+### 11. Run the application
 
 ```bash
 uvicorn app.main:app --reload
@@ -123,19 +135,22 @@ uvicorn app.main:app --reload
 
 | URL | Description |
 |---|---|
-| http://localhost:8000 | Home page |
-| http://localhost:8000/products | Product catalogue |
+| http://localhost:8000 | Editorial homepage |
+| http://localhost:8000/products | Catalogue (supports ?category=slug filter) |
 | http://localhost:8000/cart | Shopping cart |
 | http://localhost:8000/checkout | Checkout |
 | http://localhost:8000/admin | Admin dashboard (login required) |
-| http://localhost:8000/api/products | Product catalogue (JSON) |
 | http://localhost:8000/docs | Interactive API documentation |
+
+> **Local dev tip:** run `npm run watch:css` in one terminal and
+> `uvicorn app.main:app --reload` in another. If a style change doesn't appear,
+> rebuild the CSS and hard-refresh the browser (Ctrl+Shift+R).
 
 ---
 
 ## Running tests
 
-Tests run against a **separate** PostgreSQL database so they never touch
+Tests run against a separate PostgreSQL database so they never touch
 development data. Create it once:
 
 ```bash
@@ -161,43 +176,37 @@ afterwards, so every test starts from a known empty state.
 
 ```
 accessories-store/
+├── .github/workflows/       # CI (tests) and CD (deploy) pipelines
 ├── alembic/                 # Migration scripts (versioned schema history)
-│   └── versions/
 ├── app/
-│   ├── config.py            # Settings loaded from environment variables
+│   ├── config.py            # Settings from environment (incl. ENVIRONMENT, S3)
 │   ├── db.py                # Engine, session factory, declarative Base
-│   ├── dependencies.py      # Shared FastAPI dependencies (cart, admin auth, cookies)
+│   ├── dependencies.py      # Shared dependencies (cart, admin auth, cookies)
 │   ├── main.py              # FastAPI application entry point
-│   ├── models.py            # SQLAlchemy ORM models (database tables)
+│   ├── models.py            # SQLAlchemy ORM models
 │   ├── schemas.py           # Pydantic schemas (API boundary)
 │   ├── security.py          # Password hashing (Argon2)
-│   ├── templating.py        # Jinja2 template configuration
-│   ├── uploads.py           # Product image upload validation and storage
-│   ├── utils.py             # Small shared helpers (slugs, tokens)
+│   ├── templating.py        # Jinja2 configuration
+│   ├── uploads.py           # Image validation + storage (local dev / S3 prod)
+│   ├── utils.py             # Slugs, tokens
 │   ├── routers/             # HTTP endpoints, grouped by area
-│   │   ├── products.py      #   JSON API for products
-│   │   ├── pages.py         #   Storefront pages (home, catalogue, detail)
-│   │   ├── cart.py          #   Cart actions
-│   │   ├── checkout.py      #   Checkout and order confirmation
-│   │   ├── admin_auth.py    #   Admin login / logout
-│   │   └── admin.py         #   Admin dashboard (orders, products)
 │   ├── services/            # Business logic
-│   │   ├── product_service.py
-│   │   ├── cart_service.py
-│   │   ├── order_service.py
-│   │   └── auth_service.py
-│   ├── templates/           # Jinja2 HTML templates (incl. admin/ and macros)
+│   ├── templates/
+│   │   ├── partials/        # Reusable template fragments (e.g. product card)
+│   │   └── admin/           # Admin dashboard templates
 │   └── static/
-│       └── uploads/         # Uploaded product images (git-ignored)
-├── docs/
-│   ├── adr/                 # Architecture Decision Records
-│   └── database-design.md   # Schema reference and rationale
+│       ├── css/             # input.css (tokens) → main.css (compiled)
+│       ├── images/          # Editorial/design images (committed)
+│       └── uploads/         # Uploaded product/category images (git-ignored)
+├── docs/                    # ADRs and database design
 ├── tests/                   # pytest suite
-├── docker-compose.yml       # PostgreSQL service definition
-├── requirements.txt         # Pinned Python dependencies
-├── seed.py                  # Development seed data
+├── docker-compose.yml
+├── Dockerfile
+├── package.json             # Frontend (Tailwind) dependencies
+├── requirements.txt         # Python dependencies
+├── seed.py                  # Dev seed data
 ├── create_admin.py          # Create an admin account (CLI)
-└── VISION.md                # Product vision and MVP scope
+└── VISION.md
 ```
 
 ### Architecture
@@ -210,61 +219,66 @@ Browser → Router → Service → Model → PostgreSQL
                   Schema (shapes what crosses the API boundary)
 ```
 
-- **Router** — HTTP plumbing only: receives the request, delegates, returns.
-- **Service** — business logic and rules (active-only products, stock checks,
-  cart totals, atomic order creation, authentication).
+- **Router** — HTTP plumbing: receives the request, delegates, returns.
+- **Service** — business logic (active-only products, stock checks, cart totals,
+  atomic order creation, authentication, filtering).
 - **Model** — SQLAlchemy tables and queries.
-- **Schema** — an explicit allowlist of fields the JSON API exposes. Database
-  models are never returned directly.
+- **Schema** — an explicit allowlist of fields the JSON API exposes.
 
-Storefront pages call the service layer directly rather than calling the JSON
-API over HTTP — both the pages and the API are presentations of the same
-business logic.
+Storefront pages call the service layer directly rather than the JSON API.
+
+### Design system
+
+Styling uses Tailwind CSS v4 with a compiled build (not the CDN). Design tokens
+(colours, fonts) live in `app/static/css/input.css` via the `@theme` directive
+and are used as semantic classes (`bg-background`, `text-ink`, `text-accent`,
+`font-serif`). The build scans templates and outputs `app/static/css/main.css`.
 
 ---
 
 ## Key domain concepts
 
-- **Guest checkout.** No customer accounts at launch. Customer details are
-  captured on the order itself.
-- **Admin authentication.** Argon2-hashed passwords, server-side sessions
-  (revocable), token in an HttpOnly cookie. Admins are created via CLI, never
-  a signup page. A single `require_admin` dependency protects every admin route.
-- **Cart vs order.** A cart is a live, mutable view — its prices always reflect
-  current product prices. An order is a permanent record — it snapshots product
-  name, SKU, and price at purchase time, so later product changes never alter
-  past orders.
-- **Cart storage.** Cart contents live in the database, identified by an opaque
-  token in an HttpOnly cookie, so contents can't be tampered with client-side
-  (ADR-002).
+- **Guest checkout.** No customer accounts at launch; details are captured on
+  the order.
+- **Admin authentication.** Argon2-hashed passwords, revocable server-side
+  sessions in an HttpOnly cookie. Admins are created via CLI. A single
+  `require_admin` dependency protects every admin route.
+- **Cart vs order.** A cart is a live view (current prices). An order is a
+  permanent record — it snapshots product name, SKU, and price at purchase.
 - **Atomic checkout.** Order creation, stock decrement, and cart deletion happen
-  in a single transaction — all succeed or all roll back.
-- **Soft delete.** Products are deactivated (`is_active = false`), never hard-
-  deleted, because they may be referenced by historical orders.
-- **Money.** Stored as `NUMERIC(10,2)` and handled as `Decimal` everywhere —
-  never a float.
-- **Image uploads.** Admin-only, validated by content (real image, allowed
-  format, size limit) with server-generated filenames, stored under
-  `static/uploads/`.
+  in one transaction — all succeed or all roll back.
+- **Soft delete.** Products are deactivated, never hard-deleted, because they may
+  be referenced by historical orders.
+- **Category filtering.** `/products?category=slug` filters the catalogue; no
+  separate per-category pages.
+- **Image storage.** Admin-only uploads, validated by content, stored on local
+  disk in development and Amazon S3 in production (chosen by ENVIRONMENT).
+- **Money.** Stored as `NUMERIC(10,2)` and handled as `Decimal` everywhere.
 
 ---
 
-## Database
+## Deployment (AWS)
 
-The schema is documented in [`docs/database-design.md`](docs/database-design.md),
-including an ER diagram and the reasoning behind key decisions.
+The app is containerized and deployed on AWS:
+
+- **ECR** stores the Docker image.
+- **ECS (Express Mode)** runs the container behind a load balancer with HTTPS.
+- **RDS** hosts PostgreSQL (private).
+- **S3** stores uploaded images (public-read, scoped to `uploads/`).
+- **GitHub Actions** builds, pushes, and deploys automatically on merge to
+  `main`, authenticating to AWS via OIDC (no long-lived keys).
+
+Production configuration (database, S3 bucket, `ENVIRONMENT=production`) is set
+as environment variables on the ECS service, never committed.
 
 ### Creating a migration
-
-After changing a model:
 
 ```bash
 alembic revision --autogenerate -m "describe the change"
 ```
 
-**Always read the generated migration before running it.** Autogenerate
-produces a draft, not a finished migration — notably, it cannot detect column
-renames and will emit a drop-and-add instead, which destroys data.
+**Always read the generated migration before running it** — autogenerate cannot
+detect column renames and will emit a destructive drop-and-add instead.
 
 ```bash
 alembic upgrade head     # apply
@@ -275,17 +289,16 @@ alembic downgrade -1     # roll back one revision
 
 ## Development workflow
 
-Work happens on feature branches; `main` is always kept in a working state.
+Feature branches; `main` is always kept working and is protected (CI must pass
+before merge). Merging to `main` triggers automatic deployment.
 
 ```bash
-git checkout main
-git pull
+git checkout main && git pull
 git checkout -b feat/short-description
-# ... make changes, commit ...
+# ... changes, commit ...
 git push -u origin feat/short-description
+# open PR → CI runs → review → merge → auto-deploys
 ```
-
-Then open a pull request, review the diff, merge, and delete the branch.
 
 ### Commit message convention
 
@@ -296,18 +309,15 @@ Then open a pull request, review the diff, merge, and delete the branch.
 | `docs:` | Documentation only |
 | `test:` | Adding or changing tests |
 | `refactor:` | Restructuring without changing behaviour |
-| `chore:` | Tooling, dependencies, config |
+| `chore:` / `ci:` | Tooling, dependencies, pipelines |
 
 ### Code quality
 
-Linting and formatting run automatically before each commit via pre-commit
-hooks (`ruff check` and `ruff format`, plus whitespace and private-key checks).
-
-To run manually:
+Ruff (lint + format) runs before each commit via pre-commit hooks.
 
 ```bash
-ruff check --fix .    # lint
-ruff format .         # format
+ruff check --fix .
+ruff format .
 pre-commit run --all-files
 ```
 
@@ -315,33 +325,29 @@ pre-commit run --all-files
 
 ## Security notes
 
-- Secrets live in `.env`, which is git-ignored. `.env.example` documents the
-  required variables without exposing values.
-- `alembic.ini` deliberately contains no database URL; Alembic reads it from
-  `app.config` at runtime.
-- Passwords are hashed with Argon2id and never stored in plaintext. Session and
-  cart tokens are generated with `secrets`, never `random`.
-- Login failures give an identical response for bad email vs bad password
-  (prevents account enumeration).
-- Cookies are `HttpOnly` and `SameSite=Lax`. `Secure` is off for local HTTP
-  development and **must be enabled in production (HTTPS)**.
-- Image uploads are validated by content and given server-generated filenames.
-- Business rules are enforced by database constraints in addition to
-  application validation.
+- Secrets live in `.env` (git-ignored); `.env.example` documents required vars.
+- `alembic.ini` contains no database URL; Alembic reads it from `app.config`.
+- Passwords hashed with Argon2id; session/cart tokens use `secrets`, not `random`.
+- Login failures are identical for bad email vs bad password (anti-enumeration).
+- Cookies are `HttpOnly` and `SameSite=Lax`; `Secure` is enabled in production.
+- Image uploads are validated by content with server-generated filenames.
+- CI/CD authenticates to AWS via OIDC — no long-lived credentials stored.
+- Business rules are enforced by database constraints in addition to app checks.
 
 ### Known limitations
 
-- Order confirmation pages are viewable by anyone with the order number
-  (guest checkout has no accounts to restrict against yet).
+- Order confirmation pages are viewable by anyone with the order number.
 - Concurrency: simultaneous checkout of the last unit is prevented by the
-  `stock_quantity >= 0` constraint but not yet handled gracefully.
-- Product images: the schema supports many images per product, but the UI
-  manages only one (the primary). Multi-image galleries are a post-launch
-  feature — no schema change needed to add them.
-- Replacing a product image leaves the old file orphaned in `static/uploads/`.
-  Cleanup is deferred; harmless at low volume.
-- Image optimization (resizing/compression on upload) is not yet done.
-- Tailwind is loaded via CDN; it will be compiled to a static file before launch.
+  `stock_quantity >= 0` constraint but not handled gracefully.
+- Category admin lacks a description input; categories cannot be deactivated
+  (they can't be hard-deleted while products reference them).
+- Product images: schema supports many per product; UI manages one (primary).
+  Multi-image galleries are deferred (no schema change needed to add them).
+- Replacing an image leaves the old file orphaned in storage; cleanup deferred.
+- Image optimization (resizing/compression) is not yet done; editorial images
+  are PNGs.
+- Production CSS is currently built locally and committed; building it in the
+  Docker image is a planned improvement.
 
 ---
 
@@ -357,21 +363,22 @@ pre-commit run --all-files
 
 ## Roadmap
 
-**MVP (in progress)**
+**Done**
 
-- [x] Foundation — FastAPI app, PostgreSQL, migrations
-- [x] Product catalogue — list and detail pages, JSON API
-- [x] Shopping cart — add, update, remove, session cookies
-- [x] Checkout and orders — guest checkout, COD / bank transfer, atomic orders
-- [x] Admin dashboard — authentication, order management, product management with image uploads
-- [ ] Public pages — About, FAQ, Contact
-- [ ] Deployment — Docker, HTTPS, cloud hosting
+- [x] Foundation — FastAPI, PostgreSQL, migrations
+- [x] Product catalogue — list, detail, category filtering
+- [x] Shopping cart — session-cookie based
+- [x] Checkout and orders — guest checkout, COD / bank transfer, atomic
+- [x] Admin dashboard — auth, orders, products, categories, image uploads
+- [x] Editorial storefront design (Tailwind design system, homepage)
+- [x] Deployment on AWS (ECS, RDS, S3) with automated CI/CD
 
-**Post-launch**
+**Next / future**
 
+- Public pages — About, FAQ, Contact
+- Custom domain and HTTPS branding
 - PayHere card payments (see [ADR-001](docs/adr/ADR-001-payment-gateway.md))
 - Customer accounts
-- Search, filtering, and tags
-- Multi-image product galleries
-- Reviews and wishlist
-- Email notifications
+- Search, sorting, tags
+- Multi-image galleries, image optimization
+- Reviews and wishlist, email notifications

@@ -7,18 +7,22 @@
   <a href="/admin" class="text-sm text-neutral-500 hover:text-neutral-900">← Dashboard</a>
 </div>
 
-<form action="/admin/categories/new" method="post" class="flex gap-2 mb-8 max-w-lg">
+<form action="/admin/categories/new" method="post" enctype="multipart/form-data" class="mb-8 max-w-lg space-y-3">
   <input name="name" required placeholder="New category name"
-         class="flex-1 border border-neutral-300 rounded px-3 py-2 text-sm">
-  <button class="bg-neutral-900 text-white text-sm px-4 py-2 rounded-full hover:bg-neutral-700">Add</button>
+         class="w-full border border-line rounded-md px-3 py-2 text-sm">
+  <input name="image" type="file" accept="image/*"
+         class="text-sm text-muted file:mr-4 file:cursor-pointer file:rounded-full file:border-0
+                file:bg-surface file:px-4 file:py-2 file:text-ink file:text-sm hover:file:bg-line transition-colors">
+  <button class="bg-accent text-background text-sm px-5 py-2 rounded-full hover:bg-accent-hover transition-colors cursor-pointer">Add category</button>
 </form>
 
 {% if categories %}
 <ul class="space-y-2 max-w-lg">
   {% for c in categories %}
-  <li class="flex justify-between text-sm border-b border-neutral-100 py-2">
+  <li class="flex justify-between items-center text-sm border-b border-line py-2">
     <span>{{ c.name }}</span>
     <span class="text-neutral-400">{{ c.slug }}</span>
+    <a href="/admin/categories/{{ c.id }}/edit" class="text-xs text-muted hover:text-ink transition-colors">Edit</a>
   </li>
   {% endfor %}
 </ul>
