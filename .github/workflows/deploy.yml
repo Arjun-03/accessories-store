@@ -45,3 +45,5 @@ jobs:
         with:
           service-name: ${{ env.ECS_SERVICE }}
           image: ${{ steps.build.outputs.image }}
+          execution-role-arn: ${{ secrets.AWS_EXECUTION_ROLE_ARN }}
+          infrastructure-role-arn: ${{ secrets.AWS_INFRASTRUCTURE_ROLE_ARN }}
