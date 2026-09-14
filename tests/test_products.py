@@ -92,3 +92,82 @@ def test_get_product_returns_404_when_inactive(client, db_session, sample_produc
     response = client.get("/api/products/rose-gold-almond")
 
     assert response.status_code == 404
+
+
+def _make_product(db, name, price, description="", category=None):
+    if category is None:
+        category = Category(name="Cat", slug="cat")
+        db.add(category)
+        db.flush()
+    p = Product(
+        category_id=category.id,
+        name=name,
+        slug=name.lower().replace(" ", "-"),
+        description=description,
+        price=Decimal(price),
+        stock_quantity=5,
+    )
+    db.add(p)
+    db.commit()
+    return p
+
+
+def test_search_matches_name(client, db_session):
+    cat = Category(name="Cat", slug="cat")
+    db_session.add(cat)
+    db_session.flush()
+    _make_product(db_session, "Gold Hoops", "1000.00", category=cat)
+    _make_product(db_session, "Silver Ring", "800.00", category=cat)
+
+    response = client.get("/products?q=gold")
+    assert response.status_code == 200
+    assert "Gold Hoops" in response.text
+    assert "Silver Ring" not in response.text
+
+
+def test_search_matches_description(client, db_session):
+    cat = Category(name="Cat", slug="cat")
+    db_session.add(cat)
+    db_session.flush()
+    _make_product(db_session, "Hoops", "1000.00", description="warm gold finish", category=cat)
+    _make_product(db_session, "Ring", "800.00", description="cool silver tone", category=cat)
+
+    response = client.get("/products?q=gold")
+    assert "Hoops" in response.text
+    assert "Ring" not in response.text
+
+
+def test_price_range_filters(client, db_session):
+    cat = Category(name="Cat", slug="cat")
+    db_session.add(cat)
+    db_session.flush()
+    _make_product(db_session, "Cheap", "500.00", category=cat)
+    _make_product(db_session, "Expensive", "5000.00", category=cat)
+
+    response = client.get("/products?min_price=1000&max_price=3000")
+    assert "Cheap" not in response.text
+    assert "Expensive" not in response.text  # both outside 1000-3000
+
+
+def test_sort_price_ascending(client, db_session):
+    cat = Category(name="Cat", slug="cat")
+    db_session.add(cat)
+    db_session.flush()
+    _make_product(db_session, "Pricey", "5000.00", category=cat)
+    _make_product(db_session, "Budget", "500.00", category=cat)
+
+    response = client.get("/products?sort=price_asc")
+    # cheaper product should appear before pricier in the HTML
+    assert response.text.index("Budget") < response.text.index("Pricey")
+
+
+def test_empty_price_does_not_error(client, db_session):
+    # The bug we hit: empty price fields submitted as "" must not 422
+    response = client.get("/products?q=gold&min_price=&max_price=&sort=")
+    assert response.status_code == 200
+
+
+def test_garbage_price_ignored(client, db_session):
+    # Defensive: non-numeric price in URL should be ignored, not crash
+    response = client.get("/products?min_price=abc")
+    assert response.status_code == 200

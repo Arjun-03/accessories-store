@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -22,16 +24,45 @@ def home(request: Request, db: Session = Depends(get_db)):
 def product_list(
     request: Request,
     category: str | None = None,
+    q: str | None = None,
+    min_price: str | None = None,
+    max_price: str | None = None,
+    sort: str | None = None,
     db: Session = Depends(get_db),
 ):
-    products = product_service.get_active_products(db, category_slug=category)
-    active_category = None
-    if category:
-        active_category = product_service.get_category_by_slug(db, category)
+    def parse_price(value: str | None) -> Decimal | None:
+        if value is None or value.strip() == "":
+            return None
+        try:
+            return Decimal(value)
+        except (InvalidOperation, ValueError):
+            return None
+
+    min_p = parse_price(min_price)
+    max_p = parse_price(max_price)
+
+    products = product_service.get_active_products(
+        db,
+        category_slug=category,
+        search=q,
+        min_price=min_p,
+        max_price=max_p,
+        sort=sort,
+    )
+    active_category = product_service.get_category_by_slug(db, category) if category else None
+    categories = product_service.list_categories(db)
     return templates.TemplateResponse(
         request,
         "products.html",
-        {"products": products, "active_category": active_category},
+        {
+            "products": products,
+            "active_category": active_category,
+            "categories": categories,
+            "q": q,
+            "min_price": min_price,
+            "max_price": max_price,
+            "sort": sort,
+        },
     )
 
 
