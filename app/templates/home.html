@@ -73,32 +73,34 @@
   {% endif %}
 </section>
 
-<section class="py-16 lg:py-24">
-  <div class="relative rounded-lg overflow-hidden">
-    <div class="aspect-[16/9] bg-surface">
-      {% if settings.editorial_images_enabled %}
-      <img src="/static/images/brand-moment.jpg" alt="Handcrafted with care"
-           class="w-full h-full object-cover object-center">
-      {% endif %}
-    </div>
-
+<section class="relative w-screen left-1/2 -translate-x-1/2 overflow-hidden">
+  <div class="h-[50vh] min-h-[400px] max-h-[600px] bg-surface">
     {% if settings.editorial_images_enabled %}
-    <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent"></div>
+    <img src="/static/images/brand-moment.jpg" alt="Handcrafted with care"
+         class="w-full h-full object-cover object-center">
     {% endif %}
+  </div>
 
-    <div class="absolute inset-0 flex items-center">
-      <div class="px-8 lg:px-16 max-w-lg">
-        <p class="text-xs tracking-[0.2em] uppercase mb-4 {% if settings.editorial_images_enabled %}text-white/75{% else %}text-accent{% endif %}">
-          Our craft
-        </p>
-        <h2 class="font-serif text-3xl lg:text-5xl leading-[1.1] mb-5 {% if settings.editorial_images_enabled %}text-white{% else %}text-ink{% endif %}">
-          Made by hand,<br>meant to last
-        </h2>
-        <p class="text-sm lg:text-base leading-relaxed {% if settings.editorial_images_enabled %}text-white/90{% else %}text-muted{% endif %}">
-          Small details, considered materials, and a quiet kind of care
-          that shows in the wearing.
-        </p>
-      </div>
+  {% if settings.editorial_images_enabled %}
+  <div class="absolute inset-0 bg-black/45"></div>
+  {% endif %}
+
+  <div class="absolute inset-0 flex items-center justify-center">
+    <div class="text-center px-6 max-w-2xl">
+      <h2 class="font-serif text-4xl lg:text-6xl leading-[1.1] mb-6
+                 {% if settings.editorial_images_enabled %}text-white{% else %}text-ink{% endif %}">
+        Made by hand,<br>meant to last
+      </h2>
+      <p class="text-base lg:text-lg leading-relaxed mb-8 max-w-xl mx-auto
+                {% if settings.editorial_images_enabled %}text-white/90{% else %}text-muted{% endif %}">
+        Small details, considered materials, and a quiet kind of care —
+        every piece designed and finished by hand.
+      </p>
+      <a href="/products"
+         class="inline-block text-sm tracking-[0.15em] uppercase pb-1 border-b transition-colors
+                {% if settings.editorial_images_enabled %}text-white border-white/60 hover:border-white{% else %}text-accent border-accent/50 hover:border-accent{% endif %}">
+        Our craft
+      </a>
     </div>
   </div>
 </section>

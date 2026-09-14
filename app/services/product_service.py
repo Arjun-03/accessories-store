@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models import Category, Product, ProductImage
@@ -44,15 +44,41 @@ def get_category_by_slug(db: Session, slug: str) -> Category | None:
     return db.execute(select(Category).where(Category.slug == slug)).scalar_one_or_none()
 
 
-def get_active_products(db: Session, category_slug: str | None = None) -> list[Product]:
+def get_active_products(
+    db: Session,
+    *,
+    category_slug: str | None = None,
+    search: str | None = None,
+    min_price: Decimal | None = None,
+    max_price: Decimal | None = None,
+    sort: str | None = None,
+) -> list[Product]:
     stmt = (
         select(Product)
         .where(Product.is_active.is_(True))
         .options(joinedload(Product.category), joinedload(Product.images))
-        .order_by(Product.created_at.desc())
     )
+
     if category_slug:
         stmt = stmt.join(Product.category).where(Category.slug == category_slug)
+
+    if search:
+        term = f"%{search}%"
+        stmt = stmt.where(or_(Product.name.ilike(term), Product.description.ilike(term)))
+
+    if min_price is not None:
+        stmt = stmt.where(Product.price >= min_price)
+    if max_price is not None:
+        stmt = stmt.where(Product.price <= max_price)
+
+    # Sorting
+    if sort == "price_asc":
+        stmt = stmt.order_by(Product.price.asc())
+    elif sort == "price_desc":
+        stmt = stmt.order_by(Product.price.desc())
+    else:  # default: newest first
+        stmt = stmt.order_by(Product.created_at.desc())
+
     return list(db.execute(stmt).unique().scalars().all())
 
 

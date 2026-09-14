@@ -2,13 +2,38 @@
 {% from "macros.html" import price_display %}
 
 {% block content %}
-<div class="flex items-baseline justify-between mb-10">
-  <h1 class="font-serif text-3xl text-ink">
+<div class="mb-8">
+  <h1 class="font-serif text-3xl text-ink mb-6">
     {% if active_category %}{{ active_category.name }}{% else %}Shop all{% endif %}
   </h1>
-  {% if active_category %}
-  <a href="/products" class="text-sm text-muted hover:text-ink transition-colors">Clear filter</a>
-  {% endif %}
+
+  <form action="/products" method="get" class="flex flex-wrap gap-3 items-end">
+    <!-- preserve category when searching/sorting -->
+    {% if active_category %}<input type="hidden" name="category" value="{{ active_category.slug }}">{% endif %}
+
+    <div class="flex-1 min-w-[200px]">
+      <input type="text" name="q" value="{{ q or '' }}" placeholder="Search products"
+             class="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent">
+    </div>
+
+    <input type="number" name="min_price" value="{{ min_price or '' }}" placeholder="Min" step="0.01"
+           class="w-24 border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent">
+    <input type="number" name="max_price" value="{{ max_price or '' }}" placeholder="Max" step="0.01"
+           class="w-24 border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent">
+
+    <select name="sort" class="border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent">
+      <option value="">Newest</option>
+      <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>Price: low to high</option>
+      <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>Price: high to low</option>
+    </select>
+
+    <button type="submit" class="bg-accent text-background text-sm px-5 py-2 rounded-full hover:bg-accent-hover transition-colors">
+      Apply
+    </button>
+    {% if q or min_price or max_price or sort or active_category %}
+    <a href="/products" class="text-sm text-muted hover:text-ink transition-colors self-center">Clear</a>
+    {% endif %}
+  </form>
 </div>
 
 {% if products %}
@@ -18,6 +43,6 @@
   {% endfor %}
 </div>
 {% else %}
-<p class="text-muted">No products found{% if active_category %} in {{ active_category.name }}{% endif %}.</p>
+<p class="text-muted">No products match your search.</p>
 {% endif %}
 {% endblock %}
