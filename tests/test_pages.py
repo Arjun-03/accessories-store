@@ -24,3 +24,9 @@ def test_product_detail_404_page(client):
 
     assert response.status_code == 404
     assert "Page not found" in response.text
+
+
+def test_public_pages_load(client):
+    for path in ["/about", "/faq", "/contact"]:
+        response = client.get(path)
+        assert response.status_code == 200

@@ -72,3 +72,18 @@ def product_detail(slug: str, request: Request, db: Session = Depends(get_db)):
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return templates.TemplateResponse(request, "product_detail.html", {"product": product})
+
+
+@router.get("/about", response_class=HTMLResponse)
+def about(request: Request):
+    return templates.TemplateResponse(request, "about.html")
+
+
+@router.get("/faq", response_class=HTMLResponse)
+def faq(request: Request):
+    return templates.TemplateResponse(request, "faq.html")
+
+
+@router.get("/contact", response_class=HTMLResponse)
+def contact(request: Request):
+    return templates.TemplateResponse(request, "contact.html")
