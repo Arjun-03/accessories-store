@@ -8,12 +8,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="icon" type="image/png" href="/static/brand/favicon.png">
 </head>
 <body class="bg-background text-ink font-sans antialiased">
 
   <header class="border-b border-line">
     <nav class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-      <a href="/" class="font-serif text-2xl tracking-tight text-ink">Éclat</a>
+      <a href="/" class="block">
+        <img src="/static/brand/wordmark.png" alt="Zoreyne" class="h-10 lg:h-12 w-auto">
+      </a>
 
       <div class="flex items-center gap-8 text-sm">
         <a href="/products" class="text-muted hover:text-ink transition-colors">Shop</a>
@@ -26,9 +29,13 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="border-t border-neutral-200 mt-24">
-    <div class="max-w-6xl mx-auto px-6 py-8 text-sm text-neutral-500">
-      © 2026 Accessories Store
+  <footer class="border-t border-line mt-24">
+    <div class="max-w-6xl mx-auto px-6 py-12 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <img src="/static/brand/logo-mark.png" alt="Zoreyne" class="h-12 w-auto">
+        <span class="text-sm text-muted">Handmade Accessories</span>
+      </div>
+      <p class="text-xs text-muted">© 2026 Zoreyne</p>
     </div>
   </footer>
 
